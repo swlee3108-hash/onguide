@@ -43,6 +43,8 @@ export default function Chat({ onBack }: { onBack: () => void }) {
   const scrollToBottom = () => bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   useEffect(scrollToBottom, [messages, loading, stage]);
 
+  const sessionCreated = useRef(false);
+
   const reset = useCallback(() => {
     const id = crypto.randomUUID();
     setMessages([]);
@@ -52,8 +54,14 @@ export default function Chat({ onBack }: { onBack: () => void }) {
     setSessionId(id);
     setSelectedConcerns([]);
     setInputValue("");
-    supabase.from("tones_sessions").insert({ id, mode: "browse" }).then();
+    sessionCreated.current = false;
   }, []);
+
+  const ensureSession = useCallback(() => {
+    if (sessionCreated.current) return;
+    sessionCreated.current = true;
+    supabase.from("tones_sessions").insert({ id: sessionId, mode: "browse" }).then();
+  }, [sessionId]);
 
   const goToPrevStage = () => {
     if (stageHistory.length === 0) {
@@ -113,6 +121,7 @@ export default function Chat({ onBack }: { onBack: () => void }) {
   };
 
   const onSelect = async (value: string) => {
+    ensureSession();
     addUsr(value);
     const newMsgs: Msg[] = [...messages, { role: "user", content: value }];
 

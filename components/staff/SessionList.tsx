@@ -41,7 +41,7 @@ export default function SessionList() {
         })
       );
 
-      setSessions(enriched);
+      setSessions(enriched.filter((s) => s.first_user_msg));
     };
     load();
     const interval = setInterval(load, 15000);
