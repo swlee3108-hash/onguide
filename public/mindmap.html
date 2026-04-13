@@ -2002,35 +2002,53 @@ document.getElementById('viewLabel').style.fontWeight='400';
   var params=new URLSearchParams(window.location.search);
   var viewParam=params.get('view');
   var concernParam=params.get('concern');
+  var subParam=params.get('sub');
   if(!viewParam&&!concernParam)return;
 
-  // Delay to ensure all DOM and canvas initialization is complete
   setTimeout(function(){
     try{
       if(viewParam==='guide'){
-        sw(1);
+        // Set flowState directly then render
         if(concernParam){
-          setTimeout(function(){
-            var cats=document.querySelectorAll('.flow-card');
-            for(var i=0;i<cats.length;i++){
-              var title=cats[i].querySelector('.fc-title');
-              if(title&&title.textContent.indexOf(concernParam)>=0){
-                cats[i].click();
-                break;
-              }
+          // Match concern to needsTree category
+          var concernKws=concernParam.split('/');
+          for(var ci=0;ci<needsTree.n.length;ci++){
+            var catName=needsTree.n[ci].name;
+            var matched=false;
+            for(var ki=0;ki<concernKws.length;ki++){
+              if(catName.indexOf(concernKws[ki])>=0){matched=true;break;}
             }
-          },500);
+            if(matched){
+              flowState.catIdx=ci;
+              flowState.subIdx=-1;
+              flowState.tierIdx=-1;
+              // Match sub-concern if provided
+              if(subParam){
+                for(var si=0;si<needsTree.n[ci].subs.length;si++){
+                  if(needsTree.n[ci].subs[si].name.indexOf(subParam)>=0){
+                    flowState.subIdx=si;
+                    break;
+                  }
+                }
+              }
+              break;
+            }
+          }
         }
+        sw(1); // This calls drawFlow() which reads flowState
       } else if(viewParam==='mindmap'){
         sw(0);
         if(!needsMode) toggleNeedsMode();
         if(concernParam){
           setTimeout(function(){
+            var concernKws=concernParam.split('/');
             var targetNode=null;
             for(var ni=0;ni<nodes.length;ni++){
-              if(nodes[ni].name&&nodes[ni].name.indexOf(concernParam)>=0&&!nodes[ni].isCenter){
-                targetNode=nodes[ni];break;
+              if(!nodes[ni].name||nodes[ni].isCenter)continue;
+              for(var ki=0;ki<concernKws.length;ki++){
+                if(nodes[ni].name.indexOf(concernKws[ki])>=0){targetNode=nodes[ni];break;}
               }
+              if(targetNode)break;
             }
             if(targetNode){
               var tz=4;
@@ -2039,7 +2057,7 @@ document.getElementById('viewLabel').style.fontWeight='400';
               zoom.target.ty=CY-targetNode.y*tz;
               animateZoom();
             }
-          },500);
+          },300);
         }
       }
     }catch(e){console.error('URL nav error:',e)}

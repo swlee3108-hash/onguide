@@ -5,15 +5,27 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import ChartNumberInput from "@/components/staff/ChartNumberInput";
-import { CONCERNS } from "@/lib/constants";
+import { CONCERNS, SUB_CONCERNS } from "@/lib/constants";
 import type { Session, Message } from "@/lib/types";
 
-function extractConcerns(msgs: Message[]): string[] {
-  const userTexts = msgs.filter((m) => m.role === "user").map((m) => m.content).join(" ");
-  return CONCERNS.map((c) => c.value).filter((concern) => {
-    const keywords = concern.split("/");
-    return keywords.some((kw) => userTexts.includes(kw));
-  });
+interface ConcernPath {
+  concern: string;
+  sub: string;
+}
+
+function extractConcernPaths(msgs: Message[]): ConcernPath[] {
+  const userTexts = msgs.filter((m) => m.role === "user").map((m) => m.content);
+  const results: ConcernPath[] = [];
+
+  for (const c of CONCERNS) {
+    const keywords = c.value.split("/");
+    if (userTexts.some((t) => keywords.some((kw) => t.includes(kw)))) {
+      const subs = SUB_CONCERNS[c.value] || [];
+      const matchedSub = subs.find((s) => userTexts.some((t) => t.includes(s)));
+      results.push({ concern: c.value, sub: matchedSub || "" });
+    }
+  }
+  return results;
 }
 
 export default function SessionDetailPage() {
@@ -26,14 +38,16 @@ export default function SessionDetailPage() {
     supabase.from("tones_messages").select("*").eq("session_id", id).order("created_at").then(({ data }) => setMessages(data || []));
   }, [id]);
 
-  const detectedConcerns = useMemo(() => extractConcerns(messages), [messages]);
+  const concernPaths = useMemo(() => extractConcernPaths(messages), [messages]);
 
-  const openGuide = (concern: string) => {
-    window.open(`/mindmap.html?view=guide&concern=${encodeURIComponent(concern)}`, "_blank");
+  const openGuide = (path: ConcernPath) => {
+    let url = `/mindmap.html?view=guide&concern=${encodeURIComponent(path.concern)}`;
+    if (path.sub) url += `&sub=${encodeURIComponent(path.sub)}`;
+    window.open(url, "_blank");
   };
 
-  const openMindmap = (concern: string) => {
-    window.open(`/mindmap.html?view=mindmap&concern=${encodeURIComponent(concern)}`, "_blank");
+  const openMindmap = (path: ConcernPath) => {
+    window.open(`/mindmap.html?view=mindmap&concern=${encodeURIComponent(path.concern)}`, "_blank");
   };
 
   if (!session) return <div className="p-8 text-t-muted">...</div>;
@@ -55,22 +69,24 @@ export default function SessionDetailPage() {
         <ChartNumberInput sessionId={session.id} initial={session.chart_number} />
       </div>
 
-      {/* Guide / Mindmap buttons */}
-      {detectedConcerns.length > 0 && (
+      {concernPaths.length > 0 && (
         <div className="mb-6 p-4 bg-surface border border-subtle rounded-lg shadow-sm">
           <p className="text-[11px] font-semibold text-t-muted tracking-wide mb-3">고민 기반 상담 도구</p>
-          <div className="flex flex-wrap gap-2">
-            {detectedConcerns.map((concern) => (
-              <div key={concern} className="flex items-center gap-1.5">
-                <span className="text-xs font-medium text-t-body px-2 py-1 bg-muted rounded-xs">{concern}</span>
+          <div className="flex flex-col gap-2">
+            {concernPaths.map((path) => (
+              <div key={path.concern} className="flex items-center gap-2">
+                <span className="text-xs font-medium text-t-body px-2 py-1 bg-muted rounded-xs">{path.concern}</span>
+                {path.sub && (
+                  <span className="text-xs text-t-secondary px-2 py-1 bg-muted rounded-xs">{path.sub}</span>
+                )}
                 <button
-                  onClick={() => openGuide(concern)}
+                  onClick={() => openGuide(path)}
                   className="text-[11px] font-medium text-a-caramel hover:text-a-copper px-2 py-1 border border-subtle rounded-xs hover:border-a-caramel transition-colors"
                 >
                   상담가이드
                 </button>
                 <button
-                  onClick={() => openMindmap(concern)}
+                  onClick={() => openMindmap(path)}
                   className="text-[11px] font-medium text-a-caramel hover:text-a-copper px-2 py-1 border border-subtle rounded-xs hover:border-a-caramel transition-colors"
                 >
                   마인드맵
@@ -81,7 +97,6 @@ export default function SessionDetailPage() {
         </div>
       )}
 
-      {/* Conversation */}
       <div className="bg-surface border border-subtle rounded-lg p-6 shadow-sm">
         <div className="flex flex-col gap-3">
           {messages.map((m) => (
