@@ -150,13 +150,13 @@ export default function Chat() {
   };
 
   return (
-    <section className="px-10 py-10 max-w-[720px] mx-auto min-h-[80vh]">
+    <section className="px-10 py-10 max-w-[720px] mx-auto">
       <div className="text-center mb-8">
         <p className="text-[10px] font-bold tracking-widest text-a-caramel">AI CONCIERGE</p>
         <h2 className="text-[22px] font-bold tracking-tight text-t-primary mt-1">상담 전 간단한 안내를 도와드릴게요</h2>
         <p className="text-xs text-t-muted mt-1">고객님께 맞는 상담을 준비해드립니다</p>
       </div>
-      <div className="flex flex-col gap-3 mb-6 min-h-[200px]">
+      <div className="flex flex-col gap-3 mb-6">
         {messages.length === 0 && (
           <SystemBubble text="안녕하세요, 톤즈의원입니다. 상담 전에 몇 가지 여쭤보고, 고객님께 맞는 상담을 준비해드릴게요." />
         )}
