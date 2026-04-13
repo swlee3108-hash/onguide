@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "ONGUIDE - 톤즈의원 광교점",
+  title: "ONGUIDE - 톤즈의원 수원광교점",
   description: "고객 맞춤 상담 준비 서비스",
 };
 

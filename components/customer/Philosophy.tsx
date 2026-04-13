@@ -23,7 +23,7 @@ export default function Philosophy({ onStartChat, onShowStaff }: { onStartChat: 
     <section className="px-10 py-12 max-w-[960px] mx-auto">
       <div className="text-center mb-10">
         <h1 className="text-4xl font-extrabold tracking-tight text-t-primary leading-tight">당신의 피부를 이해하는 곳</h1>
-        <p className="text-sm text-t-muted mt-2">톤즈의원 광교점</p>
+        <p className="text-sm text-t-muted mt-2">톤즈의원 수원광교점</p>
       </div>
       <div className="grid grid-cols-3 gap-5 mb-8">
         {cards.map((c) => (

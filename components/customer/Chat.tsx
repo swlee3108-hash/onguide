@@ -9,7 +9,20 @@ import { CONCERNS, SUB_CONCERNS, PRIORITIES } from "@/lib/constants";
 import type { Profile, ChatResponse } from "@/lib/types";
 import { supabase } from "@/lib/supabase";
 
-type Stage = 0 | 0.5 | 0.6 | 0.7 | 1 | 2 | 3 | 4 | 5 | 6;
+// Stage flow:
+// 0    : visit type (처음/재방문)
+// 0.5  : revisit purpose (유지관리/새고민/둘다)
+// 0.6  : revisit - previous treatment free input
+// 0.7  : revisit - satisfaction buttons
+// 1    : concern selection (6 categories, multi)
+// 2    : sub-concern selection (multi)
+// 3    : treatment experience yes/no
+// 3.5  : (yes) what treatment? free input
+// 3.7  : (yes) satisfaction buttons
+// 4    : priority selection (multi, max 2)
+// 5    : additional notes (button + free input)
+// 6    : done, profile displayed
+type Stage = number;
 
 interface Msg {
   role: "assistant" | "user";
@@ -49,19 +62,18 @@ export default function Chat({ onBack }: { onBack: () => void }) {
     }
     const prev = stageHistory[stageHistory.length - 1];
     setStageHistory((h) => h.slice(0, -1));
-    // Remove the last user + system message pair
+    // Remove messages: find last user msg, remove it and everything after + the AI reply before it
     setMessages((msgs) => {
-      const lastUserIdx = msgs.length - 1;
-      let removeFrom = lastUserIdx;
+      if (msgs.length === 0) return msgs;
+      // Find last user message index
+      let lastUserIdx = -1;
       for (let i = msgs.length - 1; i >= 0; i--) {
-        if (msgs[i].role === "user") { removeFrom = i; break; }
+        if (msgs[i].role === "user") { lastUserIdx = i; break; }
       }
-      // Remove from last user message to end, plus the system message before it
-      const prevSysIdx = removeFrom - 1;
-      if (prevSysIdx >= 0 && msgs[prevSysIdx].role === "assistant") {
-        return msgs.slice(0, prevSysIdx);
-      }
-      return msgs.slice(0, removeFrom);
+      if (lastUserIdx < 0) return msgs;
+      // Also remove the AI reply that came right before (the question that led to this answer)
+      const cutFrom = lastUserIdx > 0 && msgs[lastUserIdx - 1].role === "assistant" ? lastUserIdx - 1 : lastUserIdx;
+      return msgs.slice(0, cutFrom);
     });
     setStage(prev);
   };
@@ -95,48 +107,76 @@ export default function Chat({ onBack }: { onBack: () => void }) {
     }
   };
 
+  const advanceTo = (nextStage: Stage) => {
+    setStageHistory((h) => [...h, stage]);
+    setStage(nextStage);
+  };
+
   const onSelect = async (value: string) => {
     addUsr(value);
-    setStageHistory((h) => [...h, stage]);
     const newMsgs: Msg[] = [...messages, { role: "user", content: value }];
 
     if (stage === 0) {
+      // Visit type
       if (value.includes("다녀본")) {
-        setStage(0.5 as Stage);
+        advanceTo(0.5);
         await callAI(newMsgs);
       } else {
-        setStage(1);
+        advanceTo(1);
         await callAI(newMsgs);
       }
-    } else if (stage === (0.5 as Stage)) {
+    } else if (stage === 0.5) {
+      // Revisit purpose
       if (value.includes("유지") && !value.includes("새로운") && !value.includes("둘")) {
-        setStage(0.6 as Stage);
+        advanceTo(0.6);
         await callAI(newMsgs);
       } else {
-        setStage(1);
+        advanceTo(1);
         await callAI(newMsgs);
       }
-    } else if (stage === (0.6 as Stage)) {
-      setStage(0.7 as Stage);
+    } else if (stage === 0.6) {
+      // Revisit - previous treatment entered -> ask satisfaction
+      advanceTo(0.7);
       await callAI(newMsgs);
-    } else if (stage === (0.7 as Stage)) {
-      setStage(5);
+    } else if (stage === 0.7) {
+      // Revisit - satisfaction answered -> additional notes
+      advanceTo(5);
       await callAI(newMsgs);
     } else if (stage === 1) {
+      // Concerns selected -> sub-concerns
       setSelectedConcerns(value.split(", "));
-      setStage(2);
+      advanceTo(2);
       await callAI(newMsgs);
     } else if (stage === 2) {
-      setStage(3);
+      // Sub-concerns selected -> treatment experience
+      advanceTo(3);
       await callAI(newMsgs);
     } else if (stage === 3) {
-      setStage(4);
+      // Treatment experience yes/no
+      if (value.includes("네") || value.includes("받아본")) {
+        // YES -> ask what treatment (free input)
+        advanceTo(3.5);
+        await callAI(newMsgs);
+      } else {
+        // NO -> skip to priorities
+        advanceTo(4);
+        await callAI(newMsgs);
+      }
+    } else if (stage === 3.5) {
+      // What treatment? (free input) -> satisfaction
+      advanceTo(3.7);
+      await callAI(newMsgs);
+    } else if (stage === 3.7) {
+      // Satisfaction answered -> priorities
+      advanceTo(4);
       await callAI(newMsgs);
     } else if (stage === 4) {
-      setStage(5);
+      // Priorities selected -> additional notes
+      advanceTo(5);
       await callAI(newMsgs);
     } else if (stage === 5) {
-      setStage(6);
+      // Additional notes -> done
+      advanceTo(6);
       await callAI(newMsgs);
       supabase.from("tones_sessions").update({ ended_at: new Date().toISOString() }).eq("id", sessionId).then();
     }
@@ -149,28 +189,106 @@ export default function Chat({ onBack }: { onBack: () => void }) {
     onSelect(text);
   };
 
+  // Stages that show a free text input bar
+  const freeInputStages = [0.6, 3.5, 5];
+  const showFreeInput = freeInputStages.includes(stage) && !loading;
+
   const renderStageUI = () => {
     if (loading) return null;
     switch (stage) {
       case 0:
-        return <SingleSelect options={[{ label: "처음 방문이에요", value: "처음이에요" }, { label: "다녀본 적 있어요", value: "네, 다녀본 적 있어요" }]} onSelect={onSelect} />;
-      case 0.5 as Stage:
-        return <SingleSelect options={[{ label: "기존 시술 유지/관리", value: "기존 시술 유지 및 관리 목적으로 방문했어요" }, { label: "새로운 고민 상담", value: "새로운 고민이 있어서 상담받고 싶어요" }, { label: "둘 다", value: "기존 시술 관리도 하고 새로운 고민도 상담받고 싶어요" }]} onSelect={onSelect} />;
-      case 0.7 as Stage:
-        return <SingleSelect options={[{ label: "만족스러웠어요", value: "만족스러웠어요" }, { label: "보통이었어요", value: "보통이었어요" }, { label: "기대에 못 미쳤어요", value: "기대보다 효과가 부족했어요" }, { label: "불편한 점이 있었어요", value: "불편한 점이 있었어요" }]} onSelect={onSelect} />;
+        return (
+          <SingleSelect
+            options={[
+              { label: "처음 방문이에요", value: "처음이에요" },
+              { label: "다녀본 적 있어요", value: "네, 다녀본 적 있어요" },
+            ]}
+            onSelect={onSelect}
+          />
+        );
+      case 0.5:
+        return (
+          <SingleSelect
+            options={[
+              { label: "기존 시술 유지/관리", value: "기존 시술 유지 및 관리 목적으로 방문했어요" },
+              { label: "새로운 고민 상담", value: "새로운 고민이 있어서 상담받고 싶어요" },
+              { label: "둘 다", value: "기존 시술 관리도 하고 새로운 고민도 상담받고 싶어요" },
+            ]}
+            onSelect={onSelect}
+          />
+        );
+      case 0.6:
+        // Free input only (이전 시술 입력)
+        return null;
+      case 0.7:
+        return (
+          <SingleSelect
+            options={[
+              { label: "만족스러웠어요", value: "만족스러웠어요" },
+              { label: "보통이었어요", value: "보통이었어요" },
+              { label: "기대에 못 미쳤어요", value: "기대보다 효과가 부족했어요" },
+              { label: "불편한 점이 있었어요", value: "불편한 점이 있었어요" },
+            ]}
+            onSelect={onSelect}
+          />
+        );
       case 1:
-        return <MultiSelect options={CONCERNS.map((c) => ({ label: c.label, value: c.value }))} onSubmit={(vals) => onSelect(vals.join(", "))} />;
+        return (
+          <MultiSelect
+            options={CONCERNS.map((c) => ({ label: c.label, value: c.value }))}
+            onSubmit={(vals) => onSelect(vals.join(", "))}
+          />
+        );
       case 2: {
         const primary = selectedConcerns[0];
         const subs = SUB_CONCERNS[primary] || [];
-        return <MultiSelect options={subs.map((s) => ({ label: s, value: s }))} onSubmit={(vals) => onSelect(vals.join(", "))} />;
+        return (
+          <MultiSelect
+            options={subs.map((s) => ({ label: s, value: s }))}
+            onSubmit={(vals) => onSelect(vals.join(", "))}
+          />
+        );
       }
       case 3:
-        return <SingleSelect options={[{ label: "네, 받아봤어요", value: "네, 다른 곳에서 시술을 받아본 적 있어요" }, { label: "아니요, 이 고민에 대해서는 처음이에요", value: "아니요, 이 고민에 대해서는 처음이에요" }]} onSelect={onSelect} />;
+        return (
+          <SingleSelect
+            options={[
+              { label: "네, 받아봤어요", value: "네, 다른 곳에서 시술을 받아본 적 있어요" },
+              { label: "아니요, 이 고민에 대해서는 처음이에요", value: "아니요, 이 고민에 대해서는 처음이에요" },
+            ]}
+            onSelect={onSelect}
+          />
+        );
+      case 3.5:
+        // Free input only (어떤 시술 받았는지)
+        return null;
+      case 3.7:
+        return (
+          <SingleSelect
+            options={[
+              { label: "만족스러웠어요", value: "만족스러웠어요" },
+              { label: "보통이었어요", value: "보통이었어요" },
+              { label: "기대에 못 미쳤어요", value: "기대보다 효과가 부족했어요" },
+              { label: "불편한 점이 있었어요", value: "불편한 점이 있었어요" },
+            ]}
+            onSelect={onSelect}
+          />
+        );
       case 4:
-        return <MultiSelect options={PRIORITIES.map((p) => ({ label: p, value: p }))} onSubmit={(vals) => onSelect(vals.join(", "))} maxSelect={2} />;
+        return (
+          <MultiSelect
+            options={PRIORITIES.map((p) => ({ label: p, value: p }))}
+            onSubmit={(vals) => onSelect(vals.join(", "))}
+            maxSelect={2}
+          />
+        );
       case 5:
-        return <SingleSelect options={[{ label: "아니요, 괜찮아요", value: "특별히 없어요" }]} onSelect={onSelect} />;
+        return (
+          <SingleSelect
+            options={[{ label: "아니요, 괜찮아요", value: "특별히 없어요" }]}
+            onSelect={onSelect}
+          />
+        );
       default:
         return null;
     }
@@ -201,7 +319,7 @@ export default function Chat({ onBack }: { onBack: () => void }) {
         {renderStageUI()}
         <div ref={bottomRef} />
       </div>
-      {(stage === (0.6 as Stage) || stage === 5) && !loading && (
+      {showFreeInput && (
         <div className="sticky bottom-0 pt-4 pb-2 bg-gradient-to-t from-page flex gap-2">
           <input
             value={inputValue}
