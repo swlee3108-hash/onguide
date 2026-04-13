@@ -2004,45 +2004,46 @@ document.getElementById('viewLabel').style.fontWeight='400';
   var concernParam=params.get('concern');
   if(!viewParam&&!concernParam)return;
 
-  if(viewParam==='guide'){
-    // Switch to 톤즈 가이드 tab
-    sw(1);
-    if(concernParam){
-      // Find matching concern category in needsTree and auto-click
-      setTimeout(function(){
-        var cats=document.querySelectorAll('.flow-card');
-        for(var i=0;i<cats.length;i++){
-          var title=cats[i].querySelector('.fc-title');
-          if(title&&title.textContent.indexOf(concernParam)>=0){
-            cats[i].click();
-            break;
-          }
+  // Delay to ensure all DOM and canvas initialization is complete
+  setTimeout(function(){
+    try{
+      if(viewParam==='guide'){
+        sw(1);
+        if(concernParam){
+          setTimeout(function(){
+            var cats=document.querySelectorAll('.flow-card');
+            for(var i=0;i<cats.length;i++){
+              var title=cats[i].querySelector('.fc-title');
+              if(title&&title.textContent.indexOf(concernParam)>=0){
+                cats[i].click();
+                break;
+              }
+            }
+          },500);
         }
-      },300);
-    }
-  } else if(viewParam==='mindmap'){
-    // Switch to mindmap in 고민별 mode
-    sw(0);
-    if(!needsMode) toggleNeedsMode();
-    if(concernParam){
-      setTimeout(function(){
-        // Find the concern in needsTree and zoom to it
-        var targetNode=null;
-        for(var ni=0;ni<nodes.length;ni++){
-          if(nodes[ni].name&&nodes[ni].name.indexOf(concernParam)>=0&&!nodes[ni].isCenter){
-            targetNode=nodes[ni];break;
-          }
+      } else if(viewParam==='mindmap'){
+        sw(0);
+        if(!needsMode) toggleNeedsMode();
+        if(concernParam){
+          setTimeout(function(){
+            var targetNode=null;
+            for(var ni=0;ni<nodes.length;ni++){
+              if(nodes[ni].name&&nodes[ni].name.indexOf(concernParam)>=0&&!nodes[ni].isCenter){
+                targetNode=nodes[ni];break;
+              }
+            }
+            if(targetNode){
+              var tz=4;
+              zoom.target.scale=tz;
+              zoom.target.tx=CX-targetNode.x*tz;
+              zoom.target.ty=CY-targetNode.y*tz;
+              animateZoom();
+            }
+          },500);
         }
-        if(targetNode){
-          var tz=4;
-          zoom.target.scale=tz;
-          zoom.target.tx=CX-targetNode.x*tz;
-          zoom.target.ty=CY-targetNode.y*tz;
-          animateZoom();
-        }
-      },500);
-    }
-  }
+      }
+    }catch(e){console.error('URL nav error:',e)}
+  },800);
 })();
 
 // ========== 검색 기능 ==========
