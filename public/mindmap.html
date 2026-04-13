@@ -2008,9 +2008,7 @@ document.getElementById('viewLabel').style.fontWeight='400';
   setTimeout(function(){
     try{
       if(viewParam==='guide'){
-        // Set flowState directly then render
         if(concernParam){
-          // Match concern to needsTree category
           var concernKws=concernParam.split('/');
           for(var ci=0;ci<needsTree.n.length;ci++){
             var catName=needsTree.n[ci].name;
@@ -2022,20 +2020,31 @@ document.getElementById('viewLabel').style.fontWeight='400';
               flowState.catIdx=ci;
               flowState.subIdx=-1;
               flowState.tierIdx=-1;
-              // Match sub-concern if provided
+              // Match sub-concern
               if(subParam){
+                var decodedSub=decodeURIComponent(subParam);
+                var subKws=decodedSub.split('/');
                 for(var si=0;si<needsTree.n[ci].subs.length;si++){
-                  if(needsTree.n[ci].subs[si].name.indexOf(subParam)>=0){
-                    flowState.subIdx=si;
-                    break;
+                  var subName=needsTree.n[ci].subs[si].name;
+                  for(var ski=0;ski<subKws.length;ski++){
+                    if(subName.indexOf(subKws[ski])>=0){
+                      flowState.subIdx=si;
+                      // Auto-select first tier (rank 1) to fully expand
+                      var tiers=needsTree.n[ci].subs[si].tiers||[];
+                      for(var ti=0;ti<tiers.length;ti++){
+                        if(tiers[ti].rank>0){flowState.tierIdx=ti;break;}
+                      }
+                      break;
+                    }
                   }
+                  if(flowState.subIdx>=0)break;
                 }
               }
               break;
             }
           }
         }
-        sw(1); // This calls drawFlow() which reads flowState
+        sw(1);
       } else if(viewParam==='mindmap'){
         sw(0);
         if(!needsMode) toggleNeedsMode();
