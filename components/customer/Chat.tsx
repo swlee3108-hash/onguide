@@ -16,9 +16,10 @@ interface Msg {
   content: string;
 }
 
-export default function Chat() {
+export default function Chat({ onBack }: { onBack: () => void }) {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [stage, setStage] = useState<Stage>(0);
+  const [stageHistory, setStageHistory] = useState<Stage[]>([]);
   const [loading, setLoading] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [sessionId, setSessionId] = useState("");
@@ -33,12 +34,37 @@ export default function Chat() {
     const id = crypto.randomUUID();
     setMessages([]);
     setStage(0);
+    setStageHistory([]);
     setProfile(null);
     setSessionId(id);
     setSelectedConcerns([]);
     setInputValue("");
     supabase.from("tones_sessions").insert({ id, mode: "browse" }).then();
   }, []);
+
+  const goToPrevStage = () => {
+    if (stageHistory.length === 0) {
+      onBack();
+      return;
+    }
+    const prev = stageHistory[stageHistory.length - 1];
+    setStageHistory((h) => h.slice(0, -1));
+    // Remove the last user + system message pair
+    setMessages((msgs) => {
+      const lastUserIdx = msgs.length - 1;
+      let removeFrom = lastUserIdx;
+      for (let i = msgs.length - 1; i >= 0; i--) {
+        if (msgs[i].role === "user") { removeFrom = i; break; }
+      }
+      // Remove from last user message to end, plus the system message before it
+      const prevSysIdx = removeFrom - 1;
+      if (prevSysIdx >= 0 && msgs[prevSysIdx].role === "assistant") {
+        return msgs.slice(0, prevSysIdx);
+      }
+      return msgs.slice(0, removeFrom);
+    });
+    setStage(prev);
+  };
 
   useEffect(() => { reset(); }, [reset]);
 
@@ -71,6 +97,7 @@ export default function Chat() {
 
   const onSelect = async (value: string) => {
     addUsr(value);
+    setStageHistory((h) => [...h, stage]);
     const newMsgs: Msg[] = [...messages, { role: "user", content: value }];
 
     if (stage === 0) {
@@ -151,7 +178,12 @@ export default function Chat() {
 
   return (
     <section className="px-10 py-10 max-w-[720px] mx-auto">
-      <div className="text-center mb-8">
+      {stage !== 6 && (
+        <button onClick={goToPrevStage} className="text-xs text-a-caramel hover:text-a-copper font-medium mb-4">
+          ← 이전으로
+        </button>
+      )}
+      <div className="text-center mb-6">
         <p className="text-[10px] font-bold tracking-widest text-a-caramel">AI CONCIERGE</p>
         <h2 className="text-[22px] font-bold tracking-tight text-t-primary mt-1">상담 전 간단한 안내를 도와드릴게요</h2>
         <p className="text-xs text-t-muted mt-1">고객님께 맞는 상담을 준비해드립니다</p>
