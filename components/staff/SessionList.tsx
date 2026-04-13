@@ -90,7 +90,7 @@ export default function SessionList() {
                 <td className="px-4 py-3 text-xs text-t-body max-w-[300px] truncate">{s.first_user_msg || "-"}</td>
                 <td className="px-4 py-3">
                   {s.chart_number ? (
-                    <span className="text-xs font-semibold text-a-copper">#{s.chart_number}</span>
+                    <span className="text-xs font-semibold text-a-copper">{s.chart_number}</span>
                   ) : (
                     <ChartNumberInput sessionId={s.id} initial={null} />
                   )}

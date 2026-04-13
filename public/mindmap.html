@@ -1,0 +1,2941 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>톤즈 가이드</title>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Pretendard Variable',Pretendard,-apple-system,system-ui,sans-serif;background:#F9F6F0;overflow:hidden;user-select:none}
+#canvas{display:block;cursor:grab}
+.tooltip{position:fixed;background:#252220;border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:10px 14px;font-size:13px;color:#F0EBE3;max-width:340px;pointer-events:none;z-index:1000;opacity:0;transition:opacity .2s;line-height:1.6;box-shadow:0 8px 30px rgba(0,0,0,.6)}
+.tooltip.show{opacity:1}
+.tooltip b{font-size:14px;display:block;margin-bottom:4px}
+.tooltip .t{display:inline-block;padding:1px 7px;border-radius:99px;font-size:11px;margin-right:4px;font-weight:600}
+.tooltip .who-box{margin-top:7px;padding:6px 9px;background:rgba(192,139,92,.1);border-left:3px solid #C08B5C;border-radius:0 6px 6px 0;font-size:11.5px;color:#E8D5C4;line-height:1.6}
+.tooltip .who-label{font-size:10px;font-weight:700;color:#C08B5C;letter-spacing:.5px;margin-bottom:2px;display:block}
+.tabs{display:flex;justify-content:center;gap:6px;padding:10px;position:sticky;top:0;z-index:50;background:#F9F6F0}
+.theme-light .tabs{background:#F9F6F0}
+.tabs button{padding:6px 18px;border:1px solid #E8E3DC;border-radius:99px;background:none;color:#8A7E72;font-size:13px;font-family:inherit;cursor:pointer;transition:.2s}
+.tabs button.on{background:#C08B5C;color:#FFFFFF;border-color:#C08B5C;font-weight:700}
+.panel{display:none}.panel.on{display:block}
+#search-box{position:fixed;top:12px;right:16px;z-index:200;display:flex;align-items:center;gap:6px}
+#search-input{background:#FFFFFF;border:1px solid #E8E3DC;border-radius:99px;padding:6px 14px 6px 36px;color:#2D2A26;font-size:13px;font-family:inherit;outline:none;width:200px;transition:.2s}
+#search-input:focus{border-color:#C08B5C;width:260px;box-shadow:0 0 0 2px rgba(192,139,92,.2)}
+#search-input::placeholder{color:#B0A89E}
+#search-icon{position:absolute;left:26px;top:50%;transform:translateY(-50%);color:#6a6560;font-size:14px;pointer-events:none}
+#search-results{position:fixed;top:48px;right:16px;z-index:200;background:#FFFFFF;border:1px solid #E8E3DC;border-radius:10px;max-width:300px;width:300px;max-height:340px;overflow-y:auto;box-shadow:0 4px 16px rgba(45,42,38,0.10);display:none}
+#search-results.show{display:block}
+.sr-item{padding:10px 14px;cursor:pointer;border-bottom:1px solid #F0EBE3;transition:.15s}
+.sr-item:last-child{border-bottom:none}
+.sr-item:hover{background:rgba(192,139,92,.08)}
+.sr-item .sr-name{font-size:13px;color:#2D2A26;font-weight:600}
+.sr-item .sr-path{font-size:11px;color:#8A7E72;margin-top:2px}
+.sr-item .sr-hl{color:#C08B5C}
+.sr-empty{padding:14px;color:#8A7E72;font-size:13px;text-align:center}
+#tm-wrap{position:relative;margin:0 auto;max-width:1200px;padding:12px}
+.tm-cell{position:absolute;overflow:hidden;border:1px solid rgba(0,0,0,.4);border-radius:6px;cursor:pointer;transition:all .25s;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:4px}
+.tm-cell:hover{z-index:10;filter:brightness(1.25);transform:scale(1.02)}
+.tm-cell .lb{font-weight:600;font-size:clamp(9px,1.2vw,13px);color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.6);line-height:1.3}
+.tm-cell .sb{font-size:clamp(8px,.9vw,11px);opacity:.8;color:rgba(255,255,255,.85);margin-top:2px}
+.legend{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;padding:6px}
+.legend span{display:flex;align-items:center;gap:4px;font-size:11px;color:#8A7E72}
+.legend i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.zoom-hint{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(27,27,36,.9);border:1px solid rgba(255,255,255,.08);border-radius:99px;padding:6px 16px;font-size:11px;color:#8A7E72;z-index:50;pointer-events:none;transition:opacity .4s}
+.zoom-hint.hide{opacity:0}
+.back-btn{position:fixed;top:52px;left:14px;background:#7B3B2B;color:#FFFFFF;border:none;border-radius:99px;padding:6px 14px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;z-index:60;display:none;transition:opacity .3s;box-shadow:0 2px 8px rgba(45,42,38,.15)}
+.back-btn.show{display:block}
+.back-btn:hover{filter:brightness(1.15)}
+.theme-light{background:#F9F6F0!important}
+.theme-light .tooltip{background:#FFFFFF;border-color:#E8E3DC;color:#4A4540}
+.theme-light .tooltip b{color:#2D2A26}
+.theme-light .who-box{background:rgba(192,139,92,.08);color:#7B3B2B}
+#themeBtn{position:fixed;bottom:16px;right:16px;z-index:200;padding:6px 14px;border:1px solid #E8E3DC;border-radius:99px;background:#FFFFFF;color:#8A7E72;font-size:12px;font-family:inherit;cursor:pointer;transition:.2s}
+#themeBtn:hover{background:#F0EBE3;color:#4A4540}
+#navPanel{position:fixed;left:12px;top:50%;transform:translateY(-50%);z-index:100;display:flex;flex-direction:column;gap:4px}
+#navPanel button{padding:6px 10px;border:1px solid rgba(255,255,255,.1);border-radius:8px;background:rgba(27,27,36,.85);color:#B0A89E;font-size:11px;font-family:inherit;cursor:pointer;text-align:left;transition:.2s;white-space:nowrap;backdrop-filter:blur(8px)}
+#navPanel button:hover{background:rgba(192,139,92,.2);color:#F0EBE3;border-color:rgba(192,139,92,.4)}
+#navPanel button.active{background:rgba(192,139,92,.25);color:#C08B5C;border-color:#C08B5C}
+.theme-light #navPanel button{background:rgba(255,255,255,.85);color:#6A6560;border-color:#E8E3DC}
+.theme-light #navPanel button:hover{background:rgba(192,139,92,.15);color:#4A4540}
+.theme-light #navPanel button.active{color:#7B3B2B;border-color:#C08B5C}
+#flow-wrap{display:flex;gap:0;padding:20px 0;height:calc(100vh - 54px);overflow-x:auto;align-items:stretch;justify-content:center}
+.flow-col{flex-shrink:0;overflow-y:auto;padding:12px 10px;display:flex;flex-direction:column;gap:4px;border-right:1px solid rgba(255,255,255,.04)}
+.flow-col:last-child{border-right:none}
+.flow-col.col-cat{width:220px}
+.flow-col.col-sub{width:260px}
+.flow-col.col-tier{width:320px}
+.flow-col.col-prog{width:380px}
+.flow-col-header{font-size:13px;font-weight:700;color:#8A7E72;text-transform:uppercase;letter-spacing:.5px;padding:8px 12px;margin-bottom:6px;white-space:nowrap}
+.flow-item{padding:14px 16px;border-radius:10px;cursor:pointer;font-size:15px;color:#B0A89E;transition:.15s;border-left:4px solid transparent}
+.flow-item:hover{background:rgba(255,255,255,.04);color:#F0EBE3}
+.flow-item.selected{background:rgba(192,139,92,.12);border-left-color:#C08B5C;color:#C08B5C;font-weight:600}
+.flow-item .fi-name{font-weight:600;margin-bottom:3px;font-size:15px}
+.flow-item .fi-desc{font-size:13px;color:#6a6560;line-height:1.5}
+.flow-item .fi-count{font-size:12px;color:#6A6560;margin-top:3px}
+.flow-item.fi-tier{border-left-width:5px}
+.flow-item.fi-tier .fi-rank{display:inline-flex;width:24px;height:24px;border-radius:50%;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;margin-right:8px;flex-shrink:0}
+.flow-item.fi-program{border-left-color:#D4A030;padding:12px 16px}
+.flow-item.fi-program .fi-name{font-size:14px}
+.theme-light .flow-item{color:#8A7E72}
+.theme-light .flow-item:hover{background:rgba(0,0,0,.03);color:#4A4540}
+.theme-light .flow-item.selected{background:rgba(192,139,92,.08);color:#7B3B2B}
+.theme-light .flow-col{border-right-color:rgba(0,0,0,.06)}
+.flow-card{background:#252220;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:16px 18px;cursor:pointer;transition:.25s;position:relative;overflow:hidden}
+.flow-card:hover{border-color:rgba(192,139,92,.5);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.flow-card .fc-icon{font-size:24px;margin-bottom:8px}
+.flow-card .fc-title{font-size:15px;font-weight:700;color:#F0EBE3;margin-bottom:4px}
+.flow-card .fc-desc{font-size:12px;color:#8A7E72;line-height:1.5}
+.flow-card .fc-count{position:absolute;top:14px;right:16px;font-size:11px;color:#6a6560;background:rgba(255,255,255,.06);padding:2px 8px;border-radius:99px}
+.flow-card .fc-badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;margin-top:8px;margin-right:4px}
+.flow-card .fc-who{margin-top:10px;padding:8px 10px;background:rgba(192,139,92,.08);border-left:3px solid #C08B5C;border-radius:0 8px 8px 0;font-size:11px;color:#D4B896;line-height:1.5}
+.flow-card .fc-arrow{position:absolute;bottom:12px;right:14px;color:#C08B5C;font-size:16px;opacity:.5;transition:.2s}
+.flow-card:hover .fc-arrow{opacity:1;transform:translateX(3px)}
+.flow-card.fc-proc{border-left:3px solid}
+.flow-card.fc-proc .fc-arrow{display:none}
+.theme-light .flow-card{background:#FFFFFF;border-color:#E8E3DC}
+.theme-light .flow-card:hover{border-color:#C08B5C;box-shadow:0 8px 24px rgba(0,0,0,.08)}
+.theme-light .flow-card .fc-title{color:#2D2A26}
+.theme-light .flow-card .fc-desc{color:#8A7E72}
+.theme-light .flow-card .fc-who{background:rgba(192,139,92,.06);color:#7B3B2B}
+.theme-light #flow-breadcrumb{color:#B0A89E}
+.flow-card.combo-highlight{border:2px solid #D4A030!important;background:linear-gradient(135deg,rgba(212,160,48,0.08),rgba(212,160,48,0.02))!important}
+.tier-step{display:flex;align-items:stretch;gap:0;position:relative;margin-bottom:2px}
+.tier-step .tier-rank{width:40px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative}
+.tier-step .tier-rank .rank-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;z-index:2}
+.tier-step .tier-rank .rank-line{position:absolute;left:50%;top:28px;bottom:0;width:2px;transform:translateX(-50%)}
+.tier-step:last-child .rank-line{display:none}
+.tier-step .tier-body{flex:1;background:#252220;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px 16px;cursor:pointer;transition:.25s}
+.tier-step .tier-body:hover{border-color:rgba(192,139,92,.4);transform:translateX(4px);box-shadow:0 4px 16px rgba(0,0,0,.3)}
+.tier-step .tier-body .tier-name{font-size:14px;font-weight:700;color:#F0EBE3}
+.tier-step .tier-body .tier-tag{display:inline-block;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;margin-left:8px}
+.tier-step .tier-body .tier-desc{font-size:12px;color:#8A7E72;margin-top:4px}
+.tier-step .tier-body .tier-programs{font-size:11px;color:#6a6560;margin-top:6px}
+.tier-step.tier-addon{opacity:.6}
+.tier-step.tier-addon .tier-body{border-style:dashed}
+.theme-light .tier-step .tier-body{background:#FFFFFF;border-color:#E8E3DC}
+.theme-light .tier-step .tier-body:hover{border-color:#C08B5C}
+.theme-light .tier-step .tier-body .tier-name{color:#2D2A26}
+.theme-light .tier-step .tier-body .tier-desc{color:#8A7E72}
+#pkgToggle{display:none}
+#pkgPanel{position:fixed;left:0;top:46px;z-index:190;width:min(260px,20vw);max-height:calc(100vh - 46px);height:auto;overflow-y:auto;background:rgba(255,255,255,.95);border-right:1px solid #E8E3DC;padding:10px 10px;backdrop-filter:blur(12px);box-shadow:2px 0 8px rgba(45,42,38,.08);cursor:default}
+#pkgPanel .pkg-drag-handle{cursor:grab;padding:3px 8px;margin:-4px -10px 6px;border-bottom:1px solid #E8E3DC;font-size:10px;color:#B0A89E;text-align:left;user-select:none}
+.pkg-cat{padding:4px 0;margin-bottom:4px}
+.pkg-cat-header{font-size:11px;font-weight:700;color:#A0623A;text-transform:uppercase;letter-spacing:.5px;padding:6px 8px;cursor:pointer;display:flex;align-items:center;gap:6px}
+.pkg-cat-header:hover{color:#C08B5C}
+.pkg-cat-body{display:none;padding-left:4px}
+.pkg-cat.open .pkg-cat-body{display:block}
+.pkg-cat.open .pkg-cat-header{color:#C08B5C}
+.pkg-item{padding:7px 10px;border-radius:8px;cursor:pointer;transition:.15s;font-size:12px;color:#4A4540;border-left:2px solid transparent;margin-bottom:2px}
+.pkg-item:hover{background:rgba(192,139,92,.06);color:#2D2A26}
+.pkg-item.active{background:rgba(212,160,48,.10);border-left-color:#D4A030;color:#A0623A}
+.pkg-item .pkg-name{font-weight:600}
+.pkg-item .pkg-desc{font-size:10px;color:#6a6560;margin-top:2px}
+.pkg-item .pkg-components{display:none;margin-top:6px;padding:6px 8px;background:rgba(255,255,255,.03);border-radius:6px;font-size:10px;color:#8A7E72;line-height:1.6}
+.pkg-item.active .pkg-components{display:block}
+.theme-light #pkgToggle{background:rgba(255,255,255,.9);color:#6A6560;border-color:#E8E3DC}
+.theme-light #pkgPanel{background:rgba(248,246,243,.95);border-left-color:#E8E3DC}
+.theme-light .pkg-item{color:#8A7E72}
+.theme-light .pkg-item:hover{background:rgba(0,0,0,.03);color:#4A4540}
+.theme-light .pkg-item.active{background:rgba(212,160,48,.06);color:#A0623A}
+#nodeOverlay{position:fixed;left:0;top:0;width:100%;height:100%;z-index:500;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.5);backdrop-filter:blur(4px)}
+#nodeOverlay.show{display:flex}
+#nodeCard{background:#252220;border:1px solid rgba(255,255,255,.1);border-radius:18px;width:min(520px,90vw);max-height:80vh;overflow-y:auto;padding:24px 28px;box-shadow:0 16px 48px rgba(0,0,0,.5);position:relative}
+#nodeCard .nc-close{position:absolute;top:14px;right:16px;width:28px;height:28px;border-radius:50%;border:1px solid rgba(255,255,255,.1);background:none;color:#8A7E72;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s}
+#nodeCard .nc-close:hover{background:rgba(255,255,255,.08);color:#fff}
+#nodeCard .nc-title{font-size:18px;font-weight:700;color:#F0EBE3;margin-bottom:4px;padding-right:36px}
+#nodeCard .nc-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+#nodeCard .nc-tag{padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600}
+#nodeCard .nc-body{font-size:13px;color:#b0a89e;line-height:1.7;margin-bottom:12px}
+#nodeCard .nc-section{margin-top:10px;padding:10px 12px;border-radius:10px;font-size:12px;line-height:1.6}
+#nodeCard .nc-section-label{font-size:10px;font-weight:700;display:block;margin-bottom:3px}
+#nodeCard .nc-dur{background:rgba(160,98,58,.1);border-left:3px solid #A0623A;color:#D4B896}
+#nodeCard .nc-dur .nc-section-label{color:#A0623A}
+#nodeCard .nc-note{background:rgba(192,80,48,.08);border-left:3px solid #C05030;color:#E8C4A8}
+#nodeCard .nc-note .nc-section-label{color:#C05030}
+#nodeCard .nc-eff{background:rgba(192,139,92,.08);border-left:3px solid #C08B5C;color:#D4B896}
+#nodeCard .nc-who{background:rgba(192,139,92,.06);border-left:3px solid #C08B5C;border-radius:0 10px 10px 0;color:#D4B896}
+#nodeCard .nc-who .nc-section-label{color:#C08B5C}
+.nc-photos{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap}
+.nc-photos .nc-thumb{width:120px;height:80px;border-radius:8px;object-fit:cover;cursor:pointer;border:1px solid rgba(255,255,255,.1);transition:.2s}
+.nc-photos .nc-thumb:hover{border-color:#C08B5C;transform:scale(1.03)}
+.nc-photos .nc-photo-label{font-size:10px;color:#6a6560;margin-top:2px;text-align:center}
+.fi-photos{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.fi-photos .fi-thumb{width:80px;height:54px;border-radius:6px;object-fit:cover;cursor:pointer;border:1px solid rgba(255,255,255,.08);transition:.2s}
+.fi-photos .fi-thumb:hover{border-color:#C08B5C;transform:scale(1.05)}
+#photoPopup{position:fixed;left:0;top:0;width:100%;height:100%;z-index:2000;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.85);cursor:pointer;backdrop-filter:blur(8px)}
+#photoPopup.show{display:flex}
+#photoPopup img{max-width:92vw;max-height:88vh;border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,.6)}
+#photoPopup .pp-close{position:fixed;top:20px;right:24px;color:#fff;font-size:28px;cursor:pointer;z-index:2001;opacity:.7;transition:.2s}
+#photoPopup .pp-close:hover{opacity:1}
+.theme-light #nodeCard{background:#FFFFFF;border-color:#E8E3DC}
+.theme-light #nodeCard .nc-title{color:#2D2A26}
+.theme-light #nodeCard .nc-body{color:#6A6560}
+.theme-light #nodeCard .nc-who{background:rgba(192,139,92,.05);color:#7B3B2B}
+#cg-philosophy{padding:64px 40px;max-width:960px;margin:0 auto}
+.cg-hero{text-align:center;margin-bottom:48px}
+.cg-hero-title{font-size:36px;font-weight:800;letter-spacing:-0.03em;line-height:1.2;color:#2D2A26}
+.cg-hero-sub{font-size:14px;color:#8A7E72;margin-top:8px}
+.cg-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-bottom:40px}
+.cg-card{background:#FFFFFF;border:1px solid #E8E3DC;border-radius:14px;padding:32px 24px;box-shadow:0 1px 2px rgba(45,42,38,0.06);transition:all 200ms cubic-bezier(0.25,0.1,0.25,1)}
+.cg-card:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(45,42,38,0.10)}
+.cg-card-num{font-size:11px;font-weight:700;letter-spacing:0.08em;color:#A0623A;margin-bottom:12px}
+.cg-card-title{font-size:22px;font-weight:700;letter-spacing:-0.015em;color:#2D2A26;margin-bottom:4px}
+.cg-card-accent{font-size:14px;font-weight:500;color:#C08B5C;margin-bottom:12px}
+.cg-card-body{font-size:14px;color:#4A4540;line-height:1.7}
+.cg-card-tags{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.cg-card-tag{font-size:11px;font-weight:500;color:#8A7E72;background:#F0EBE3;padding:4px 10px;border-radius:4px}
+.cg-cta{text-align:center}
+.cg-cta-btn{display:inline-flex;align-items:center;height:48px;padding:0 32px;background:#E87A00;color:#FFFFFF;border:none;border-radius:10px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;letter-spacing:-0.005em;transition:all 200ms;box-shadow:0 2px 8px rgba(232,122,0,0.25)}
+.cg-cta-btn:hover{background:#D06E00;transform:translateY(-1px);box-shadow:0 4px 16px rgba(232,122,0,0.3)}
+#cg-chat{padding:40px;max-width:720px;margin:0 auto;min-height:80vh}
+.cg-chat-header{text-align:center;margin-bottom:32px}
+.cg-chat-label{font-size:10px;font-weight:700;letter-spacing:0.08em;color:#C08B5C}
+.cg-chat-title{font-size:22px;font-weight:700;letter-spacing:-0.015em;color:#2D2A26;margin-top:4px}
+.cg-chat-sub{font-size:12px;color:#8A7E72;margin-top:4px}
+.cg-messages{display:flex;flex-direction:column;gap:12px;margin-bottom:24px;min-height:200px}
+.cg-msg{max-width:75%;padding:14px 18px;font-size:14px;line-height:1.65;animation:cgFadeIn 300ms ease}
+.cg-msg-sys{align-self:flex-start;background:#F0EBE3;color:#4A4540;border-radius:20px 20px 20px 4px}
+.cg-msg-user{align-self:flex-end;background:#E87A00;color:#FFFFFF;border-radius:20px 20px 4px 20px}
+.cg-msg-loading{align-self:flex-start;background:#F0EBE3;color:#8A7E72;border-radius:20px 20px 20px 4px;padding:14px 24px}
+@keyframes cgFadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.cg-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.cg-chip{padding:8px 16px;background:#FFFFFF;border:1px solid #E8E3DC;border-radius:9999px;font-size:13px;font-weight:500;color:#4A4540;cursor:pointer;transition:all 200ms;font-family:inherit}
+.cg-chip:hover{border-color:#C08B5C;color:#A0623A;background:rgba(192,139,92,0.06)}
+.cg-chip:active{background:rgba(192,139,92,0.12)}
+.cg-programs{display:flex;flex-direction:column;gap:8px;margin-top:12px;max-width:75%}
+.cg-prog-card{background:#FFFFFF;border:1px solid #E8E3DC;border-radius:10px;padding:14px 16px;cursor:pointer;transition:all 200ms;box-shadow:0 1px 2px rgba(45,42,38,0.06)}
+.cg-prog-card:hover{border-color:#C08B5C;transform:translateY(-1px);box-shadow:0 2px 8px rgba(45,42,38,0.08)}
+.cg-prog-tier{display:inline-block;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;color:#FFFFFF;margin-bottom:6px}
+.cg-prog-name{font-size:15px;font-weight:600;color:#2D2A26;letter-spacing:-0.01em}
+.cg-prog-desc{font-size:12px;color:#6A6560;margin-top:2px;line-height:1.5}
+.cg-input-bar{position:sticky;bottom:0;padding:16px 0;background:linear-gradient(transparent,#F9F6F0 20%);display:flex;gap:8px}
+.cg-input{flex:1;height:48px;padding:0 20px;background:#FFFFFF;border:1px solid #E8E3DC;border-radius:10px;font-size:14px;font-family:inherit;color:#2D2A26;outline:none;transition:border-color 200ms}
+.cg-input:focus{border-color:#C08B5C;box-shadow:0 0 0 2px rgba(192,139,92,0.15)}
+.cg-input::placeholder{color:#B0A89E}
+.cg-send{height:48px;width:48px;background:#E87A00;color:#FFFFFF;border:none;border-radius:10px;font-size:18px;cursor:pointer;transition:background 200ms;display:flex;align-items:center;justify-content:center}
+.cg-send:hover{background:#D06E00}
+.cg-send:disabled{background:#E8E3DC;color:#B0A89E;cursor:default}
+.cg-offline{text-align:center;padding:12px;background:rgba(192,80,48,0.08);border-radius:10px;font-size:13px;color:#C05030;margin-bottom:16px;display:none}
+.cg-profile-card{max-width:85%;background:#FFFFFF;border:2px solid #C08B5C;border-radius:14px;padding:20px;margin-top:16px;box-shadow:0 2px 8px rgba(45,42,38,0.08);animation:cgFadeIn 300ms ease}
+.cg-profile-header{font-size:14px;font-weight:700;color:#A0623A;letter-spacing:-0.01em;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #F0EBE3}
+.cg-profile-row{display:flex;gap:8px;margin-bottom:8px;font-size:13px;line-height:1.5}
+.cg-profile-row:last-child{margin-bottom:0}
+.cg-profile-label{flex-shrink:0;width:80px;font-weight:600;color:#8A7E72}
+.cg-profile-value{color:#2D2A26}
+#cg-staff{padding:64px 40px;max-width:960px;margin:0 auto;border-top:1px solid #E8E3DC}
+.cg-staff-header{text-align:center;margin-bottom:40px}
+.cg-staff-title{font-size:22px;font-weight:700;letter-spacing:-0.015em;color:#2D2A26}
+.cg-staff-sub{font-size:14px;color:#8A7E72;margin-top:4px}
+.cg-staff-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px}
+.cg-staff-card{background:#FFFFFF;border:1px solid #E8E3DC;border-radius:14px;padding:24px;text-align:center;box-shadow:0 1px 2px rgba(45,42,38,0.06)}
+.cg-staff-photo{width:80px;height:80px;border-radius:50%;background:#F0EBE3;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#C08B5C}
+.cg-staff-name{font-size:16px;font-weight:600;color:#2D2A26}
+.cg-staff-role{font-size:11px;font-weight:600;letter-spacing:0.05em;color:#A0623A;margin-top:2px}
+.cg-staff-philosophy{font-size:13px;color:#6A6560;margin-top:8px;line-height:1.5}
+</style>
+</head>
+<body class="theme-light">
+
+<!-- 검색 박스 -->
+<div id="search-box">
+  <span id="search-icon"></span>
+  <input id="search-input" type="text" placeholder="시술명 검색..." autocomplete="off" />
+</div>
+<div id="search-results"></div>
+  <div id="navPanel"></div>
+
+<div class="tabs">
+  <button class="on" onclick="sw(0)">마인드맵</button>
+  <button onclick="sw(1)">톤즈 가이드</button>
+  <button onclick="sw(2)">고객 안내</button>
+</div>
+
+<div class="panel on" id="p0">
+<div id="viewToggleWrap" style="display:flex;justify-content:center;padding:6px 0">
+  <span id="viewToggle" style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:#8A7E72;cursor:pointer;user-select:none;padding:4px 10px;border:1px solid #E8E3DC;border-radius:99px;background:#FFFFFF" onclick="toggleNeedsMode()">
+    <span id="viewLabel" style="color:#8A7E72">시술별</span>
+    <span style="display:inline-block;width:32px;height:16px;border-radius:99px;background:#E8E3DC;position:relative;transition:.3s" id="toggleTrack">
+      <span style="display:block;width:12px;height:12px;border-radius:50%;background:#C08B5C;position:absolute;top:2px;left:2px;transition:.3s" id="toggleDot"></span>
+    </span>
+    <span id="viewLabelR" style="color:#C08B5C;font-weight:700">고민별</span>
+  </span>
+</div>
+  <div class="legend">
+    <span><i style="background:#C05030"></i>쁘띠</span>
+    <span><i style="background:#C08B5C"></i>스킨</span>
+    <span><i style="background:#A0623A"></i>리프팅</span>
+    <span><i style="background:#8B6B50"></i>바디·주사</span>
+  </div>
+  <div class="legend" id="needsLegend" style="display:none">
+    <span><i style="background:#A0623A"></i>주름·처짐</span>
+    <span><i style="background:#8B6B50"></i>볼륨·윤곽</span>
+    <span><i style="background:#C08B5C"></i>피부결·톤</span>
+    <span><i style="background:#D4A030"></i>여드름·모공</span>
+    <span><i style="background:#C05030"></i>바디라인</span>
+    <span><i style="background:#B8976A"></i>컨디션·항노화</span>
+  </div>
+  <canvas id="canvas"></canvas>
+</div>
+
+  <div class="panel" id="p1">
+    <div id="flow-wrap"></div>
+  </div>
+
+  <div class="panel" id="p2">
+    <div id="customer-guide" style="height:calc(100vh - 54px);overflow-y:auto;padding:0">
+      <div id="cg-philosophy"></div>
+      <div id="cg-chat"></div>
+      <div id="cg-staff"></div>
+    </div>
+  </div>
+
+<button id="pkgToggle" onclick="togglePkgPanel()" style="display:none"></button>
+<div id="pkgPanel"></div>
+<div class="tooltip" id="tip"></div>
+<div id="nodeOverlay" onclick="if(event.target===this)closeNodeCard()"><div id="nodeCard"></div></div>
+<div id="photoPopup" onclick="closePhotoPopup()"><span class="pp-close">X</span><img id="photoPopupImg" src=""></div>
+<button class="back-btn" id="backBtn" onclick="zoomOut()">← 전체 보기</button>
+<button id="themeBtn" onclick="toggleTheme()">어두운 테마</button>
+<div class="zoom-hint" id="zoomHint">노드 클릭 = 확대 · 배경 드래그 = 이동 · 우클릭/Esc = 축소</div>
+
+<script>
+var tip=document.getElementById('tip');
+var backBtn=document.getElementById('backBtn');
+var zoomHint=document.getElementById('zoomHint');
+function showT(e,h){tip.innerHTML=h;tip.classList.add('show');moveT(e)}
+function moveT(e){var x=e.clientX+14,y=e.clientY+14;if(x+310>innerWidth)x=e.clientX-310;if(y+180>innerHeight)y=e.clientY-180;tip.style.left=x+'px';tip.style.top=y+'px'}
+function hideT(){tip.classList.remove('show')}
+
+function sw(n){
+  document.querySelectorAll('.tabs button').forEach(function(b,i){b.className=i===n?'on':''});
+  document.querySelectorAll('.panel').forEach(function(p,i){p.className=i===n?'panel on':'panel'});
+  if(n===0){zoomHint.classList.remove('hide')}else{zoomHint.classList.add('hide')}
+  var np=document.getElementById('navPanel');if(np)np.style.display=n===0?'flex':'none';
+  if(n===0&&!needsMode){showPkgPanel()}else{hidePkgPanel()}
+  if(n===1){drawFlow()}
+  if(n===2) initCustomerGuide();
+}
+
+var CC={"보톡스":"#C05030","필러":"#D4885A","바이오ST":"#E0A878","리프팅":"#A0623A","색소":"#C08B5C","모공흉터":"#C9956B","기타":"#D4B088","바디":"#8B6B50","수액":"#A88B70"};
+var JC=["#C05030","#C08B5C","#A0623A","#8B6B50"];
+var JN=["쁘띠","스킨","리프팅","바디·주사"];
+
+var tree={j:[
+  {name:"쁘띠",subs:[
+    {name:"톡신/윤곽",brandInfo:"주름톡신 가능 부위\n이마 · 미간 · 콧등세로 · 콧등가로 · 콧볼 · 눈가 · 눈밑 · 자갈턱 · 입꼬리\n\n[TIP] 다부위 동시 시술 시 객단가↑ / 앨러간→디스포트→제오민→코어→하이 순 추천",items:[
+      {n:"주름톡신",brands:[
+        {n:"앨러간",t:"주름톡신 1순위 추천. 가능 부위: 이마/미간/콧등세로/콧등가로/콧볼/눈가/눈밑/자갈턱/입꼬리 · [TIP] 이마+미간+콧등 항상 함께 권유",note:"시술 후 4시간 눕지 않기, 1주 사우나·음주 금지, 시술 부위 마사지 금지",dur:"주름: 지속 약 4~6개월",w:"처음 보톡스 도전하는 분 / 이마·눈가 주름이 신경 쓰이는 분",c:"보톡스",l:"1순위",v:18},
+        {n:"디스포트",t:"주름톡신 2순위 추천. 퍼짐성 좋아 넓은 부위 효과적 · [TIP] 이마+미간+콧등 항상 함께 권유",note:"시술 후 4시간 눕지 않기, 1주 사우나·음주 금지, 눈주변 시술 시 눈 비비지 않기",dur:"주름: 지속 약 4~5개월",w:"퍼짐성 좋은 제품을 원하는 분 / 넓은 범위를 자연스럽게 케어하고 싶은 분",c:"보톡스",l:"2순위",v:17},
+        {n:"제오민",t:"주름톡신 3순위 추천. 불순물 없어 내성 우려 시 추천 · [TIP] 이마+미간+콧등 항상 함께 권유",note:"시술 후 4시간 눕지 않기, 1주 사우나·음주 금지, 기존 보톡스 내성 고객에게 적합",dur:"주름: 지속 약 3~4개월",w:"보톡스 내성이 생긴 분 / 순수 제품을 선호하는 분",c:"보톡스",l:"3순위",v:16},
+        {n:"코어",t:"주름톡신 4순위 추천. 국산 제품 · [TIP] 이마+미간+콧등 항상 함께 권유",note:"시술 후 4시간 눕지 않기, 1주 사우나·음주 금지",dur:"주름: 지속 약 2~3개월",w:"안전하지만 가성비 있는 제품을 선호하는 분",c:"보톡스",l:"4순위",v:15},
+        {n:"하이",t:"주름톡신 5순위 추천. 국산 제품 · [TIP] 이마+미간+콧등 항상 함께 권유",note:"시술 후 4시간 눕지 않기, 1주 사우나·음주 금지",dur:"주름: 지속 약 1~2개월",w:"합리적 가격의 보톡스를 원하는 분",c:"보톡스",l:"5순위",v:14}
+      ],c:"보톡스",l:"진입",v:18},
+      {n:"사각턱보톡스",brands:[
+        {n:"앨러간",t:"사각턱 1순위 추천. 교근(저작근) 슬림 · [TIP] 침샘보톡스 부위 매번 확인 권유",note:"시술 후 2시간 저작운동 금지, 5시간 눕지 않기, 1주 사우나·음주 금지, 딱딱한 음식 자제",dur:"턱: 지속 약 6~8개월",w:"얼굴이 각지고 커 보이는 분 / 이갈이가 심한 분",c:"보톡스",l:"1순위",v:17},
+        {n:"디스포트",t:"사각턱 2순위 추천. 교근 슬림 · [TIP] 침샘보톡스 부위 매번 확인 권유",note:"시술 후 2시간 저작운동 금지, 5시간 눕지 않기, 1주 사우나·음주 금지, 딱딱한 음식 자제",dur:"턱: 지속 약 5~6개월",w:"얼굴이 각지고 커 보이는 분",c:"보톡스",l:"2순위",v:16},
+        {n:"제오민",t:"사각턱 3순위 추천. 불순물 없어 내성 우려 시 추천 · [TIP] 침샘보톡스 부위 매번 확인 권유",note:"시술 후 2시간 저작운동 금지, 5시간 눕지 않기, 1주 사우나·음주 금지, 딱딱한 음식 자제",dur:"턱: 지속 약 4~5개월",w:"보톡스 내성이 생긴 분",c:"보톡스",l:"3순위",v:15},
+        {n:"코어",t:"사각턱 4순위 추천. 국산 제품 · [TIP] 침샘보톡스 부위 매번 확인 권유",note:"시술 후 2시간 저작운동 금지, 5시간 눕지 않기, 1주 사우나·음주 금지, 딱딱한 음식 자제",dur:"턱: 지속 약 3~4개월",w:"안전하지만 가성비 있는 제품을 선호하는 분",c:"보톡스",l:"4순위",v:14},
+        {n:"하이",t:"사각턱 5순위 추천. 국산 제품 · [TIP] 침샘보톡스 부위 매번 확인 권유",note:"시술 후 2시간 저작운동 금지, 5시간 눕지 않기, 1주 사우나·음주 금지, 딱딱한 음식 자제",dur:"턱: 지속 약 1~2개월",w:"합리적 가격의 보톡스를 원하는 분",c:"보톡스",l:"5순위",v:13}
+      ],c:"보톡스",l:"진입",v:17},
+      {n:"슬림 턱라인 패키지",t:"사각턱+침샘톡신(턱밑/귀밑 택 1) V라인 핵심 진입 · [TIP] 둘 다 필요 시 침샘보톡스 정상가로 추가 안내 · [TIP] 턱끝 뒤쪽 지방 신경 쓰이는 경우 지방 부위임을 반드시 인지시켜드릴 것",w:"얼굴이 크거나 각져 보여서 고민인 분 / V라인·갸름한 얼굴을 원하는 분 / 이갈이·턱 뭉침이 있는 분",c:"보톡스",l:"진입",v:17},
+      {n:"라인정리 톡신",brands:[
+        {n:"종아리",t:"기본 200U부터 안내. 근육 크기 크고 힘이 강한 경우 300~400U 가능 · [TIP] 까치발 들어서 근육 크기·위치 반드시 확인",note:"시술 후 2시간 격렬한 운동 금지, 1주 사우나·음주 금지, 1주 장시간 보행 자제",dur:"지속 약 4~6개월",w:"종아리가 두껍거나 알이 배긴 분 / 다리 라인 개선을 원하는 분",c:"보톡스",l:"진입",v:12},
+        {n:"승모근",t:"기본 200U부터 안내. 근육 크기 크고 힘이 강한 경우 300~400U 가능 · [TIP] 어깨 으쓱 해서 근육 크기·범위 반드시 체크",note:"시술 후 2시간 격렬한 운동 금지, 1주 사우나·음주 금지, 1주 무거운 물건 들기 자제",dur:"지속 약 4~6개월",w:"승모근이 발달해 목이 짧아 보이는 분 / 어깨 라인 개선을 원하는 분",c:"보톡스",l:"진입",v:12},
+        {n:"허벅지",t:"기본 200U부터 안내. 근육 크기 크고 힘이 강한 경우 300~400U 가능",note:"시술 후 2시간 격렬한 운동 금지, 1주 사우나·음주 금지, 1주 장시간 보행 자제",dur:"지속 약 4~6개월",w:"허벅지 바깥쪽 근육이 발달해 다리가 굵어 보이는 분",c:"보톡스",l:"진입",v:11}
+      ],c:"보톡스",l:"진입",v:12},
+      {n:"핫 라인 톡신",t:"바디보톡스+바디 지방분해 패키지 (종아리 300U + 바디핏 40cc) · [주의] 바디핏에 스테로이드 성분 포함 — 비스테로이드 변경 시 추가비용 발생함을 반드시 안내",w:"종아리+바디라인 동시 집중 케어 원하는 분 / 바디 관리에 적극적이고 예산 여유 있는 분",c:"보톡스",l:"업셀",v:14},
+      {n:"더모톡신",t:"근육층 아닌 피부 진피층에 톡신 주입 (스킨보톡스/메조보톡스) · 시술 후 2~3시간 뒤 세안·화장 가능, 3~7일 음주·사우나·격한 운동 자제, 시술 부위 강한 자극 금지",w:"잔주름·피부결이 고민인 분 / 모공이 넓고 늘어진 분 / 피부 탄력이 떨어진 분 / 표정은 자연스럽게 유지하면서 피부만 개선하고 싶은 분 / 중요한 이벤트 앞두고 피부 컨디션 올리고 싶은 분",c:"보톡스",l:"진입",v:13,eff:"기대효과: 잔주름 자연스러운 개선 · 모공 축소 · 피부 탄력·리프팅 · 피부결·톤 개선 · 피지·땀 분비 감소 · 지속 약 2~3개월, 2~3개월 주기 재시술 권장 · 장점: 스킨부스터 대비 엠보(울퉁불퉁) 현상이 짧게 지속됨"},
+      {n:"윤곽주사(T아큐)",t:"[주의] 스테로이드 성분 포함 — 비스테로이드 변경 시 추가비용 발생 반드시 안내 · 가능 부위: 턱라인/심부볼/이중턱/광대/팔자위 · 부위당 6cc 추천 · [TIP] 턱라인+이중턱 동시 진행 시 12cc 권장",w:"수술 없이 윤곽 개선을 원하는 분 / 볼살·광대가 도드라져 보이는 분 / 비수술 관리를 선호하는 분",c:"보톡스",l:"진입",v:13},
+      {n:"데옥시콜산",t:"데옥시콜산 기본 2cc · [TIP] 지방량 많은 경우 4cc 권장 · 1달 간격으로 3~5회 시술 추천 · [주의] 붓기·몽우리 최대 4주까지 지속될 수 있음 반드시 사전 안내",w:"이중턱이 고민인 분 / 다이어트 후에도 턱 밑 살이 안 빠지는 분 / 날씬한데 유독 턱 아래가 처진 분",c:"보톡스",l:"진입",v:11},
+      {n:"침샘톡신",t:"턱밑·귀밑 침샘에 톡신 주입 → 침샘 크기 축소 → 턱라인 슬림 효과 · [TIP] 사각턱보톡스와 함께 진행 시 V라인 시너지 극대화",w:"턱 아래가 볼록하거나 이중턱처럼 보이는 분 / V라인 개선을 원하는 분",c:"보톡스",l:"진입",v:11},
+      {n:"측두근 톡신",t:"측두근(관자놀이 위 저작근) 톡신 주입 → 측두근 축소 → 머리 윗부분 좁아지는 효과 · [TIP] 사각턱+침샘+측두근 동시 진행 시 얼굴 전체 슬림 효과 극대화",w:"머리가 크게 보이는 분 / 이갈이로 측두근이 발달한 분",c:"보톡스",l:"진입",v:10},
+      {n:"T노스주사",t:"지방 슬림주사 6cc · 가벼운 턱라인·이중턱 관리 · [TIP] 인모드FX·리프팅 시술과 병행 시 효과 상승 · 가성비 진입 시술",w:"가벼운 턱라인 정리를 원하는 분 / 윤곽주사 전 부담 없이 시작하고 싶은 분",c:"보톡스",l:"진입",v:10}
+    ]},
+    {name:"필러",brandInfo:"사용 필러 브랜드\n[국산] 아띠에르 (국산·메디톡스·바이페이직·리도카인 함유 / 지속 6~12개월)\n[국산프리미엄] 유스필 (국산프리미엄·HoPE기술·볼륨감 우수 / 지속 8~14개월)\n[수입] 벨로테로 (수입·독일멀츠·틴달 적음·눈밑입술 강점 / 지속 12~18개월) [인증] FDA 승인\n[추천] 레스틸렌 (수입프리미엄·세계최초HA필러·볼륨부위 강점 / 지속 12~18개월) [인증] FDA 승인 (2003)",items:[
+      {n:"뾰족 라인 필러",t:"턱끝필러 1cc + 자갈턱톡신 · [TIP] 턱끝이 넓고 뭉툭한 경우 2~3cc까지 시술 가능",w:"턱이 짧거나 뭉툭해서 얼굴이 동그랗게 보이는 분",c:"필러",l:"진입",v:16},
+      {n:"탱글 앵두입술",t:"입술필러 1cc + 입꼬리보톡스 · [TIP] 입꼬리+입술 볼륨 동시 케어 · 입술이 얇거나 처진 입꼬리로 화나 보이는 인상을 한 번에 개선",w:"입꼬리가 처져 화나 보이는 인상이 고민인 분 / 얇은 입술에 볼륨감을 원하는 분 / 입꼬리+입술을 동시에 케어하고 싶은 분 / 노화로 입술이 얇아지거나 안으로 말려들어가는 분",c:"필러",l:"진입",v:15},
+      {n:"미세주름 필러",t:"가능 부위: 이마/미간/콧등/눈가/팔자/입가/눈꺼풀/목주름 · 처음 필러 진입 추천 · [주의] 벨로테로 소프트만 사용 가능",w:"팔자주름이 깊어진 분 / 입술이 얇아져 인상이 칙칙해 보이는 분 / 처음 필러 시술에 도전하는 분",c:"필러",l:"진입",v:14},
+      {n:"볼록 이마라인",t:"이마필러 3cc+1cc. 둥글고 볼록한 이마 라인 · [TIP] 이마+관자 동시 진행 시 최소 8cc 권유",w:"이마가 편평하거나 꺼진 느낌인 분 / 둥글고 풍성한 이마를 원하는 분 / 동안 이미지를 원하는 분",c:"필러",l:"업셀",v:15},
+      {n:"볼륨 필러",t:"앞볼/팔자/옆볼/심부볼 볼륨복원. 중안면 볼륨감 회복 · [TIP] 앞볼 볼륨 채울 시 중안부가 짧아 보이는 동안 효과 + 생기 있는 이미지",w:"볼살이 꺼져 나이 들어 보이는 분 / 다이어트 후 얼굴이 홀쭉해진 분 / 중안면 볼륨 회복이 필요한 분",c:"필러",l:"진입",v:13},
+      {n:"관자필러",t:"관자 부위 볼륨 충전 · [TIP] 관자가 채워지면 광대뼈가 덜 도드라져 보이고 얼굴 라인이 부드럽게 정리되는 효과 · 이마+관자 동시 진행 시 최소 8cc 권유",w:"광대가 튀어나와 보이거나 얼굴 옆 라인이 각져 보이는 분 / 관자가 꺼져 얼굴이 해골처럼 보이는 분 / 이마와 함께 부드러운 옆 라인을 원하는 분",c:"필러",l:"업셀",v:14},
+      {n:"엣지필러",t:"눈밑/애교/인디언밴드/마리오네트 특수부위 전용 필러 · 섬세하고 정밀한 부위에 특화된 시술 · [주의] 틴달 현상 위험 있는 부위로 벨로테로/레스틸렌 사용 권장",w:"눈밑·애교살·인디언밴드·마리오네트 라인이 고민인 분 / 섬세한 부위를 자연스럽게 교정하고 싶은 분",c:"필러",l:"진입",v:13},
+      {n:"눈밑꺼짐 필러",t:"NEW · 다크서클/눈밑 함몰 개선 · [주의] 벨로테로/레스틸렌만 사용 가능 (틴달 현상 최소화) · [TIP] 잼버실과 함께 티켓팅 시 시너지 우수 — 실이 지지대 역할을 해 필러 고정력↑ 처짐 개선 동시 가능 · [TIP] 아이잼버실 8줄 함께 진행 시: 스프링 형태의 실이 눈밑 꺼진 부위를 채우며 볼륨 형성 + 콜라겐 생성 촉진으로 피부 탄력 강화 → 필러 볼륨과 실 볼륨이 결합되어 더 입체적이고 오래 지속, 표정에 따라 유연하게 움직여 이물감 적음",w:"눈 밑이 꺼지거나 다크서클로 지쳐 보이는 분 / 눈 밑 그늘·음영이 신경 쓰이는 분 / 눈밑 탄력까지 함께 개선하고 싶은 분",c:"필러",l:"진입",v:12},
+      {n:"중안부 원데이 무제한",t:"국산 프리미엄 필러(유스필) 최대 5cc · 원장님이 얼굴 균형에 맞게 직접 디자인하여 중안부 볼륨을 채워주는 패키지",w:"중안면·볼 전체 볼륨을 한 번에 집중적으로 채우고 싶은 분 / 원장님 맞춤 디자인으로 자연스러운 볼륨을 원하는 분",c:"필러",l:"업셀",v:15},
+      {n:"레스틸렌 리프트업 필러",t:"[인증] FDA 승인 히알루론산 필러 · 자연스러운 볼륨 + 리프팅 효과 동시 구현 · 2cc 사용 · 광교 시그니처 디자인필러",w:"모든 고객님께 추천 가능 / 볼륨과 리프팅을 한 번에 원하는 분 / 자연스러운 결과를 원하는 분",c:"필러",l:"핵심",v:17},
+      {n:"눈웃음 필러",t:"애교살 필러 · 눈 밑 애교살을 자연스럽게 만들어 생기 있는 인상 · [주의] 수입/수입프리미엄 필러만 사용 가능 (틴달 현상 최소화)",w:"눈 밑이 밋밋하고 생기 없어 보이는 분 / 눈웃음이 귀여운 인상을 원하는 분",c:"필러",l:"진입",v:13},
+      {n:"오똑 코라인 패키지",t:"[주의] 레스틸렌만 사용 가능 · 구성: 코필러 1cc + 코실 4줄 · [TIP] 시너지 효과: 필러로 콧대 볼륨을 올리고 코실이 모양을 잡아줘 더 오똑하고 오래 유지 / 코실이 필러가 옆으로 퍼지는 것을 억제해 더 선명하고 자연스러운 코 라인 완성 · [TIP] 코실 추가 시술 가능 (추가 비용 발생)",w:"코가 낮거나 콧대가 없어 고민인 분 / 수술 없이 자연스럽게 코를 높이고 싶은 분 / 볼륨+라인을 동시에 잡고 싶은 분",c:"필러",l:"진입",v:12}
+    ]},
+    {name:"실리프팅",items:[
+      {n:"팔자주름개선",t:"볼륨실(잼버실) 4줄 + 필러 1cc 콤보 · [TIP] 잼버실 장점: ①실이 지지대 역할을 해 필러의 이동·흘러내림 방지 ②필러 볼륨을 제자리에 고정해 더 자연스럽고 오래 유지 ③처진 조직을 당겨 탄력+볼륨 동시 개선",w:"팔자주름이 깊고 볼 처짐까지 있는 분 / 필러만으로는 부족했던 분 / 주름·탄력을 동시에 케어하고 싶은 분",c:"필러",l:"업셀",v:14},
+      {n:"레이어스 1vial",t:"콜라겐자극 필러. 바이오ST 대안",w:"자연스러운 피부 재생·탄력을 원하는 분 / 일반 필러보다 콜라겐 자극 효과를 원하는 분",c:"필러",l:"업셀",v:13},
+      {n:"실루엣 소프트",t:"이중 원뿔 콘(Bidirectional Cone) 구조의 녹는 실(PDO+PLA) · 콘이 조직을 양방향으로 잡아 리프팅 후 고정력 우수 · 콜라겐 재생 촉진 · 시술 즉시 V라인 효과 체감 · 2줄/4줄/6줄 선택",w:"즉각적인 V라인 리프팅을 원하는 분 / 비수술 리프팅 중 강력한 효과를 원하는 분 / 처짐이 뚜렷한 분",c:"필러",l:"업셀",v:16},
+      {n:"코그실 리프팅",t:"톱니(Cog) 구조 PDO 실 · 톱니가 피하조직을 물리적으로 당겨 고정 · 콜라겐 재생 유도 · 8줄/16줄/24줄 선택 · [TIP] 줄 수가 많을수록 리프팅 효과 강력",w:"턱라인·볼 처짐이 뚜렷한 분 / 강력한 물리적 리프팅을 원하는 분",c:"필러",l:"업셀",v:15},
+      {n:"테스실리프팅",t:"360° 전방향 돌기 PDO 실 · 조직 고정력이 뛰어나 자연스러우면서 강한 리프팅 · 1줄/8줄/16줄 선택 · 코그실과 병행 시 시너지 극대화",w:"자연스러운 리프팅을 원하는 분 / 코그실과 병행하여 극대화하고 싶은 분",c:"필러",l:"업셀",v:14},
+      {n:"이중턱 전용실",t:"이중턱 부위 특화 실리프팅 · 턱 아래 처진 살을 당겨 고정 · [TIP] 윤곽주사·데옥시콜산과 병행 시 효과 극대화",w:"이중턱이 뚜렷하게 처진 분 / 턱라인 개선을 원하는 분",c:"필러",l:"업셀",v:13}
+    ]},
+    {name:"콜라겐 부스터",items:[
+      {n:"레디어스",t:"[인증] FDA·CE·식약처 3중 승인 · 구성: 수성 겔 캐리어 + CaHA(칼슘 하이드록시아파타이트) 입자 · 콜라겐 부스터 중 유일하게 시술 직후 즉각 효과 확인 가능 — 겔이 즉시 공간을 채워 볼륨 형성, 이후 겔이 흡수되면 남은 CaHA 입자가 섬유아세포 자극해 콜라겐+엘라스틴 지속 생성 · 콜라겐 타입1·3 및 엘라스틴까지 생성 → 탄력·볼륨 동시 개선 · [TIP] 필러가 부담스러운 분께 자연스러운 볼륨 대안 · 1~2개월 간격 2회 권장, 지속 약 12~18개월",w:"피부 탄력 저하와 볼 꺼짐이 함께 있는 분 / 인위적 필러 볼륨이 부담스러운 분 / 자연스럽게 티 안 나는 동안 이미지 원하는 분",c:"바이오ST",l:"핵심",v:16},
+      {n:"쥬베룩",brands:[
+        {n:"볼륨",t:"[인증] FDA·CE 인증 · 주성분: PDLLA(폴리젖산)+HA 결합 · 둥근 입자 구조 → 결절 위험 낮고 안전성 높음 · 자가 콜라겐 생성 유도 → 시간이 지날수록 자연스럽게 피부가 차오름 · 탄력 70% + 볼륨 30% 개선 · 필러 대체 볼루마이징 시술 · 1개월 간격 3회 권장, 지속 약 1~2년",note:"시술 후 마사지 금지(결절 예방), 1주 음주·사우나 자제",dur:"지속 약 1~2년",w:"자연스러운 볼륨감을 원하는 분 / 필러 거부감이 있는 분 / 볼·팔자·관자놀이 볼륨 개선이 필요한 분",c:"바이오ST",l:"핵심",v:15},
+        {n:"아이",t:"쥬베룩 아이 · 눈가·눈밑 전용 콜라겐 부스터 · 볼륨보다 탄력·잔주름 개선에 특화 · 쥬베룩볼륨보다 묽은 제형 → 얇고 예민한 눈가에 안전 주입 · PDLLA 성분이 눈가 진피층에서 콜라겐 생성 촉진 → 자연스럽게 탄력 차오름 · 다크서클·눈가 잔주름·눈밑 꺼짐 개선",note:"시술 후 마사지 금지, 1주 음주·사우나 자제",dur:"지속 약 6~12개월",w:"눈가 잔주름·탄력이 고민인 분 / 눈밑이 꺼지거나 다크서클이 있는 분 / 필러 없이 눈가를 자연스럽게 개선하고 싶은 분",c:"바이오ST",l:"업셀",v:14}
+      ],t:"[인증] FDA·CE 인증 · PDLLA(폴리젖산)+HA 콜라겐 부스터 · 둥근 입자 구조로 안전성 높음",w:"자연스러운 볼륨감을 원하는 분 / 필러 거부감이 있는 분",c:"바이오ST",l:"핵심",v:15},
+      {n:"스컬트라",t:"[인증] FDA 승인 (2004년) · 주성분: PLLA(폴리-L-젖산) · [TIP] 쥬베룩볼륨 vs 스컬트라 차이: 쥬베룩볼륨은 둥근 입자 구조라 안전성 높고 부작용 적은 반면, 스컬트라는 거친 입자 구조로 이물반응이 더 강하게 일어나 콜라겐 재생 자극이 더 강력 → 볼륨 형성 효과 우수 · 깊은 주름·볼·관자놀이 등 큰 볼륨 감소 부위에 탁월 · 1개월 간격 3회 권장, 지속 약 2년",w:"볼·팔자·관자놀이 등 큰 볼륨 손실이 있는 분 / 강력한 콜라겐 재생·리프팅 효과를 원하는 분 / 50~60대 안티에이징 집중 케어",c:"바이오ST",l:"핵심",v:15}
+    ]},
+    {name:"스킨부스터",items:[
+      {n:"리쥬란",brands:[
+        {n:"힐러",t:"주성분: PDRN(연어DNA·폴리뉴클레오티드) · 피부 재생·탄력 개선 핵심 스킨부스터 · 진피층 두께 증가·콜라겐 생성 촉진·피부 장벽 강화 · 나비존 2cc / 얼굴 전체 최소 4cc~10cc 이상까지 당일 한 번에 시술 가능 · 3~4주 간격 3~4회 권장",note:"시술 후 세안·화장 2~3시간 후 가능, 1주 음주·사우나 자제, 엠보싱 현상 당일~1~2일 내 소실 정상",dur:"지속 약 3~6개월",w:"피부 재생·탄력 개선이 필요한 분 / 칙칙하고 생기 없는 피부가 고민인 분 / 스킨부스터 처음 경험하는 분",c:"바이오ST",l:"핵심",v:18},
+        {n:"HB",t:"주성분: PDRN + 히알루론산(HA) + 리도카인 복합 · 힐러 대비 통증 약 53% 감소 · 재생 효과에 수분·물광 효과 동시 추가 · 건조하거나 민감해서 통증이 걱정되는 분께 추천 · 3~4주 간격 3~4회 권장",note:"시술 후 세안·화장 2~3시간 후 가능, 1주 음주·사우나 자제",dur:"지속 약 3~6개월",w:"피부 재생과 수분·물광 효과를 동시에 원하는 분 / 통증에 예민한 분 / 건조하고 생기 없는 피부가 고민인 분",c:"바이오ST",l:"업셀",v:16},
+        {n:"아이",t:"주성분: PDRN(힐러와 동일 성분) · 눈가 전용 특화 · 힐러 대비 묽은 제형으로 특수처리 → 점성·탄성 낮추고 퍼짐성·흡수율 높임 → 얇고 예민한 눈가에 안전하게 주입 가능 · 엠보싱 소실 시간 짧아 빠른 일상 복귀 · 눈가 잔주름·다크서클·탄력 동시 개선 · [TIP] 최소 2cc부터 권장 · 미국FDA·식약처 승인 · 3~4주 간격 3회 후 3~6개월 주기 유지",note:"시술 후 세안·화장 가능, 1주 음주·사우나·흡연 자제, 시술 부위 압박·자극 금지",dur:"지속 약 3~6개월",w:"눈가 잔주름·탄력 저하가 고민인 분 / 눈 밑이 얇고 건조한 분 / 다크서클 개선을 원하는 분",c:"바이오ST",l:"업셀",v:15}
+      ],t:"MUST/HIT · 핵심 스킨부스터. PDRN(연어DNA) 성분으로 피부 재생+탄력",w:"피부 재생·탄력 개선이 필요한 분 / 칙칙하고 생기 없는 피부가 고민인 분 / 스킨부스터 처음 경험하는 분",c:"바이오ST",l:"핵심",v:18},
+      {n:"리바이브",t:"벨로테로 리바이브 · 주성분: CPM 히알루론산(20mg/mL) + 글리세롤(17.5mg/mL) · 독일 멀츠 DCLT(동적 가교 기술) 적용 · HA가 수분 끌어당기고 글리세롤이 물 분자 잡아줘 오래 지속 · 시술 직후 즉각 수분광·부드러움 체감 가능 · 기존 스킨부스터 대비 엠보싱·멍·붓기 현저히 적음 · 잔주름·탄력·모공·피부결·톤 개선 · 4주 간격 3회 권장, 지속 약 6개월",w:"속건조로 피부가 당기고 화장이 들뜨는 분 / 민감하고 예민한 피부로 자극이 걱정되는 분 / 기존 스킨부스터 통증·다운타임이 부담스러운 분 / 중요한 일정 전 빠른 피부 개선이 필요한 분",c:"바이오ST",l:"핵심",v:16},
+      {n:"엘라바에 리투오 6cc",t:"세계 최초 ECM(세포외기질) 부스터 · 주성분: hADM(무세포동종진피) — 실제 인체 진피조직에서 세포 제거 후 ECM 구조 보존 · 콜라겐·엘라스틴·히알루론산 등 진피 구성 성분 직접 보충 (기존 스킨부스터는 콜라겐 생성 유도에 그쳤다면 리투오는 ECM 자체를 직접 채움) · 피부 구조 자체를 복원·재건하는 근본적 접근 · 모공·기미·잡티·피부결·밀도 개선 · 1회 시술부터 효과 체감, 3회 후 진피 밀도·탄력 장기 유지",w:"기존 스킨부스터를 여러 번 해도 효과가 아쉬웠던 분 / 피부 구조 자체를 근본적으로 개선하고 싶은 분 / 모공·탄력·피부결을 한 번에 케어하고 싶은 분",c:"바이오ST",l:"업셀",v:14},
+      {n:"쥬베룩물광",t:"구성: 쥬베룩 2.5cc + 물광 2.5cc + 하이쿡스/더마샤인 + 모공톡신 1cc + 크라이오 + 진정팩 · 쥬베룩으로 콜라겐 생성·탄력 개선, 물광으로 수분·광채 동시 충전, 모공톡신으로 피지·모공 타이트닝, 크라이오+진정팩으로 마무리 진정까지 한 번에",w:"모공이 넓고 피부 탄력이 떨어진 분 / 수분·탄력·모공 세 가지를 한 번에 케어하고 싶은 분 / 피부 전반적인 퀄리티 업을 원하는 분",c:"바이오ST",l:"업셀",v:15},
+      {n:"모공탄력 물광 패키지",t:"구성: 하이톡스(스킨톡신) 3cc + 물광 2.5cc + 크라이오 · 가성비 스킨부스터 패키지 · 하이톡스로 모공·피지 타이트닝, 물광으로 수분·광채 충전, 크라이오로 마무리 진정 · [주의] 물광 시술 특성상 1~2주 엠보 현상 발생 가능 — 사전 반드시 안내",w:"합리적인 가격으로 모공+수분을 동시에 케어하고 싶은 분 / 피부결 개선과 광채를 원하는 분 / 다운타임 감수하고 가성비 있는 관리를 원하는 분",c:"바이오ST",l:"업셀",v:13},
+      {n:"볼륨 콜라겐",t:"콜라겐 부스팅",w:"피부 콜라겐 저하로 처짐·주름이 시작된 분 / 자연스러운 볼륨감·탄력 회복을 원하는 분",c:"바이오ST",l:"진입",v:12},
+      {n:"엑소좀 레드스팟케어",t:"구성: 엑소좀 P198 4cc · 고농축 엑소좀으로 피부 재생 촉진·염증 진정·붉음증 개선 · 트러블 자국·레드스팟·민감성 피부에 특화 · 시술 직후 진정 효과 체감 가능 · [주의] 화장품으로 허가된 제품으로 주사(인젝션) 불가 — 도포 후 기기로 흡수하는 방식으로만 시술 가능",w:"민감성 피부로 자극에 약한 분 / 붉은 트러블 자국·레드스팟이 오래 남는 분 / 피부 재생·진정 관리가 필요한 분",c:"바이오ST",l:"진입",v:11},
+      {n:"쥬베룩 1cc",t:"단독 1cc 티켓팅 가능 · [TIP] 모공 레이저 진행 시 깊은 흉터 부위에 추가 티켓팅하기 좋음 · 객단가 팁: 흉터 많은 경우 1cc 3회 패키지(=3cc)로 당일 연결 시술 → 모공치료 3회권 + 쥬베룩 3cc 3회 동시 티켓팅 시 객단가 크게 상승",w:"모공 레이저와 함께 흉터 집중 케어를 원하는 분 / 깊은 여드름 흉터가 있는 분 / 모공 치료와 병행해 효과를 극대화하고 싶은 분",c:"바이오ST",l:"업셀",v:14},
+      {n:"쥬베룩아이 부스팅데이",t:"구성: 쥬베룩 아이 2cc + 스킨톡신 1cc · 눈가 콜라겐 재생 + 모공·잔주름 동시 개선 · 한 번 방문으로 눈가 집중 케어",w:"눈가 잔주름·탄력이 신경 쓰이는 분 / 눈가를 한 번에 집중 케어하고 싶은 분",c:"바이오ST",l:"업셀",v:13},
+      {n:"탄력아이 프로젝트",t:"구성: 쥬베룩 아이 2cc + 리쥬란 아이 1cc · 쥬베룩(콜라겐 재생)+리쥬란(피부 재생) 이중 시너지 · 눈가 탄력·다크서클·잔주름 동시 개선",w:"눈가 탄력과 재생을 동시에 원하는 분 / 눈밑 다크서클이 심한 분",c:"바이오ST",l:"업셀",v:14},
+      {n:"줄기세포 PDRN",t:"줄기세포 유래 PDRN(아기주사) 3cc · 피부 재생·진정·탄력 개선 · SONO모드+LED와 병행 시 흡수율 극대화 · [TIP] 시술 후 즉각 피부 결 개선 체감",w:"피부 재생·진정이 필요한 분 / 시술 후 빠른 회복을 원하는 분 / 예민한 피부인 분",c:"바이오ST",l:"진입",v:12},
+      {n:"물광주사",t:"HA(히알루론산) 기반 수분 공급 주사 · 더마샤인/하이쿡스 기기로 균일하게 주입 · 즉각적인 수분광·피부톤 개선 · [주의] 1~2주 엠보 현상 발생 가능 — 사전 안내 필수",w:"피부가 건조하고 수분감이 부족한 분 / 즉각적인 물광 효과를 원하는 분",c:"바이오ST",l:"진입",v:12}
+    ]}
+  ]},
+  {name:"스킨",subs:[
+    {name:"레이저/토닝",items:[
+      {n:"커스텀 레이저",t:"맞춤 프로그램 · 고객 피부 상태에 따라 레이저를 2~3가지 조합해 진행\n\n프로그램 구성 방식\n· 커스텀 올인원: 2가지 레이저 조합 · 토큰 2개 차감\n· 셀렉션 올인원: 3가지 레이저 조합 · 토큰 3개 차감\n\nEX) 커스텀 올인원 → 1회차감 레이저 2개 / 2회차감 레이저 1개\n셀렉션 올인원 → 1회차감 레이저 3개 / 1회차감+2회차감 레이저 1개+3회차감 레이저 1개\n\n[국산프리미엄] 1회 차감 레이저\n클리어 코코 · 피코토닝(2000~2500S) · 홍조토닝 · 힐링 프리미엄 · 줌패스 50개 이하/모세혈관제거 · 네오빔 토닝 · 포텐자 아그네스(20개 이하, 팁값 별도) · 기미주사\n\n[국산] 2회 차감 레이저\n클라리티 클리어올 · 피코 더블토닝(샷수 5000~6000S) · 흑자 클리어 스팟 3개 · 클라리티 라인 리프팅 · 모자이크3D 흉터 줌패스\n\n3회 차감 레이저\n모자이크 3D 나비존 · 점제거 30개 · 포텐자 펌핑팁+PDRN 2CC(팁별도) · 루비필+골드PTT+SONO모드+클라리티 아크네 힐링 프리미엄",w:"다양한 피부 고민을 한 번 방문으로 효율적으로 케어하고 싶은 분 / 맞춤형 레이저 조합을 원하는 분",c:"색소",l:"핵심",v:17},
+      {n:"클라리티 클리어올",t:"클라리티 레이저로 얼굴 전체 케어 · 각질·솜털·색소·붉은기 제거 + 스킨플래닝 효과 · 한 번에 피부 톤·결·촉감을 고르게 정리 · [TIP] 꾸준히 받을수록 피부재생 효과 누적",w:"전반적인 피부 정돈을 원하는 분 / 각질·색소·붉은기가 복합적으로 있는 분 / 매끄럽고 균일한 피부결을 원하는 분",c:"색소",l:"핵심",v:15},
+      {n:"클리어코코",t:"L755+L1064 듀얼 파장 레이저 · L755: 가시털·솜털 정체증 제모(나비존·코 모공 신경 쓰이는 분께 추천) · L1064: 염증 억제·일시적 피부 열수축(=제네시스 효과) → 피부 질감 개선·탄력 상승·잔털 제모+열수축 동시(설명은 피부재생으로) · [TIP] 스킨부스터·모공톡신 시술 전 먼저 진행 시 만족도 높음(시술 시간 짧아 마취 덜 풀림) · [주의] 시술 직후 즉각 만족도 높지만 유지기간 1개월 미만 — 사전 안내 필수",w:"코·나비존 솜털·모공이 신경 쓰이는 분 / 즉각적인 효과를 원하는 분(시술 경험 적은 분) / 피부 재생·탄력 개선을 꾸준히 관리하고 싶은 분",c:"색소",l:"진입",v:16},
+      {n:"원데이 올인원 베이직",t:"맞춤형 레이저 · 주근깨·잡티 타겟 색소 케어 · 한 번 방문으로 색소·톤을 한 번에 정리",w:"바쁜 일정에 한 번 방문으로 확실한 효과를 원하는 분 / 주근깨·잡티가 고민인 분 / 색소·톤을 한 번에 관리하고 싶은 분",c:"색소",l:"핵심",v:17},
+      {n:"원데이 올인원 프리미엄",t:"맞춤형 레이저 · 주근깨·잡티 + 흑자 포함 심화 색소 케어 · 베이직보다 강력한 파장으로 깊은 색소까지 타겟",w:"흑자·깊은 색소침착이 있는 분 / 색소 고민이 복합적이고 심한 분 / 베이직 이상의 강력한 케어를 원하는 분",c:"색소",l:"업셀",v:16},
+      {n:"플래티넘 토닝 패키지",t:"구성: 클렌징 + 피코케이/피코플러스 + 더마V/클라리티 힐링 프리미엄 + LED + 진정팩 · 색소 치료(피코 레이저)와 피부재생(더마V 힐링·1064파장)을 한 번에 · [TIP] 더마V힐링(L1064) 함께 해야 하는 이유: 피코 레이저로 색소를 깨뜨린 후 1064 파장이 염증 반응 억제·열수축 유도 → 피부 진정과 재생을 동시에 촉진, 색소 치료 후 남는 붉음·자극을 빠르게 회복시켜 만족도·지속력 모두 높아짐",w:"꾸준한 정기 관리로 피부톤을 유지하고 싶은 분 / 기미·잡티가 반복적으로 생기는 분 / 색소 치료와 피부재생을 동시에 원하는 분",c:"색소",l:"업셀",v:14},
+      {n:"올인원 풀토닝 패키지",t:"구성: 클라리티 클리어올 + 피코케이/피코플러스 + 더마V/클라리티 힐링 프리미엄 · 클리어올로 솜털·각질·색소·붉은기 전체 정리, 피코로 잡티·기미 집중 타겟, 더마V 힐링으로 재생·진정 마무리 · 색소·붉은기·피부재생 세 가지를 한 번에 케어하는 올인원 구성",w:"색소·홍조·피부 전반적인 고민이 복합적인 분 / 한 번 방문으로 확실하게 정리하고 싶은 분",c:"색소",l:"업셀",v:15},
+      {n:"플래티넘 홍조 패키지",t:"구성: 더마V 홍조토닝 + 더마V/클라리티 힐링 프리미엄 · 더마V 홍조토닝으로 혈관·붉은기 집중 억제, 힐링 프리미엄(1064파장)으로 염증 반응 진정·피부 재생 촉진 · 홍조 치료 직후 피부 안정화까지 한 번에",w:"얼굴이 쉽게 붉어지거나 홍조·실핏줄이 고민인 분 / 민감하고 자극에 쉽게 반응하는 피부 / 홍조 치료 후 빠른 진정·회복을 원하는 분",c:"색소",l:"진입",v:13},
+      {n:"피부재생 더마브이",t:"재생 레이저",w:"피부 재생·회복력이 떨어진 분 / 시술 후 피부 진정과 재생이 필요한 분",c:"색소",l:"업셀",v:11},
+      {n:"비스포크 톤업",t:"대표원장님 맞춤 프로그램 · 넓게 퍼진 기미부터 난치성 색소까지 빠르고 안전하게 케어 · 개인 피부 상태에 맞춰 레이저 종류·파장·강도를 직접 설계",w:"기미가 넓게 퍼져 있는 분 / 난치성 색소·오타모반 등 일반 시술로 효과가 부족했던 분 / 맞춤형 집중 색소 케어를 원하는 분",c:"색소",l:"1순위",v:18},
+      {n:"비스포크 링클리셋",t:"대표원장 단독 시술 · 눈밑+눈가/입가 / 눈두덩 / 이마+미간 / 목/손등 부위별 맞춤 주름 리셋 프로그램 · 레이저+필러+부스터 복합 설계",w:"특정 부위 주름을 근본적으로 개선하고 싶은 분 / 대표원장 맞춤 시술을 원하는 분",c:"색소",l:"1순위",v:17},
+      {n:"비스포크 모공·흉터",t:"대표원장 단독 시술 · 나비존/이마+관자/턱라인 또는 얼굴 전체 · 프리미엄/플래그십 2단계 · 복합 레이저+부스터 조합으로 모공·흉터 근본 개선",w:"일반 모공·흉터 치료로 효과 부족했던 분 / 최고 수준의 모공·흉터 개선을 원하는 분",c:"색소",l:"1순위",v:17},
+      {n:"비스포크 리프팅",t:"대표원장 단독 시술 · 프리미엄/플래그십 2단계 · 울쎄라+써마지+온다+실리프팅 등 복합 설계",w:"비수술 리프팅의 최고 효과를 원하는 분",c:"리프팅",l:"1순위",v:17},
+      {n:"비스포크 홍조",t:"대표원장 단독 시술 · 얼굴 전체 홍조 맞춤 치료 프로그램",w:"난치성 홍조로 고민인 분 / 일반 홍조 치료로 효과 부족했던 분",c:"색소",l:"1순위",v:16},
+      {n:"비스포크 여드름",t:"대표원장 단독 시술 · 이마+관자 / 턱라인 / 얼굴 전체 · 중증·난치성 여드름 맞춤 치료",w:"난치성·중증 여드름으로 고민인 분 / 일반 여드름 치료로 호전이 안 된 분",c:"모공흉터",l:"1순위",v:16},
+      {n:"비스포크 스팟 레이저",t:"대표원장 단독 시술 · 직경 100mm 이하 특정 색소 병변 집중 제거",w:"특정 색소 병변을 정밀하게 제거하고 싶은 분",c:"색소",l:"1순위",v:15},
+      {n:"비스포크 타투 리무벌",t:"대표원장 단독 시술 · 눈썹문신/아이라인/입술/바디 타투 제거 · 피코레이저 기반 3회 프로그램",w:"문신·반영구 제거를 원하는 분",c:"색소",l:"1순위",v:14},
+      {n:"시그니처 톤업",t:"부원장님 맞춤 프로그램 · 개인 피부 상태에 맞춘 맞춤형 색소·톤 케어",w:"맞춤형 피부톤 개선을 원하는 분 / 전반적인 색소·피부결 관리가 필요한 분",c:"색소",l:"핵심",v:16},
+      {n:"기미주사",t:"구성: 트라넥삼산 4cc + 물광주사 1cc + 더마샤인 · 트라넥삼산이 멜라닌 생성 억제·기미 색소 타겟, 물광주사로 수분·영양 동시 공급, 더마샤인으로 균일하게 흡수 · [TIP] 기대효과: 기미·색소침착 개선 + 피부톤 균일화 + 수분광 동시 케어 · 레이저와 병행 시 시너지 우수",w:"기미·색소침착이 뚜렷한 분 / 레이저만으로 효과가 부족했던 분 / 기미 치료와 수분 케어를 동시에 원하는 분",c:"색소",l:"진입",v:12},
+      {n:"피코케이",t:"파장: 532nm + 1064nm 듀얼 · 나노초보다 1000배 빠른 피코초 단위 레이저 · 532nm: 표피 얕은 색소(주근깨·잡티·검버섯) 타겟 · 1064nm: 진피 깊은 색소(기미·색소침착) 타겟 · 색소 입자를 모래처럼 잘게 분쇄 → 면역세포가 쉽게 제거 · 주변 조직 열손상 최소화, 다운타임 적음 · 1~2주 간격 권장",w:"주근깨·잡티·검버섯이 고민인 분 / 기미·색소침착으로 피부가 칙칙한 분 / 다운타임 없이 색소 치료를 원하는 분",c:"색소",l:"핵심",v:16},
+      {n:"피코플러스",t:"파장: 532nm + 595nm + 1064nm 다파장 · 피코케이보다 파장 선택지 넓어 복합 색소에 강점 · 532nm: 표피 색소(잡티·주근깨) · 595nm: 혈관성 색소·홍조·여드름 자국(골드토닝 효과) · 1064nm: 진피 색소·난치성 기미·오타모반 · 피코+나노 듀얼모드로 색소 깊이에 따라 맞춤 조사 가능 · 식약처 기미 치료 적응증 인증 획득 · MLA렌즈 모드로 모공·흉터 콜라겐 재생까지 가능",w:"복합 색소(기미+혈관성+잡티) 고민인 분 / 난치성 기미·오타모반이 있는 분 / 피코케이로 효과 부족했던 분 / 여드름 자국과 색소를 동시에 케어하고 싶은 분",c:"색소",l:"업셀",v:17},
+      {n:"비립종·점 제거",t:"CO2 레이저 또는 어븀야그 레이저로 비립종·쥐젖·편평사마귀·점 제거 · 병변 크기·종류에 따라 레이저 선택 · [TIP] CO2 편평사마귀 30개(2mm 미만) / 점 제거 30개/50개/100개 단위 시술 가능",w:"비립종·쥐젖이 신경 쓰이는 분 / 점·사마귀 제거를 원하는 분",c:"색소",l:"진입",v:12}
+    ]},
+    {name:"여드름",items:[
+      {n:"네오빔",t:"피지선(기름)에 흡수가 잘 되는 1450nm 레이저로 피지선을 데움\n\nA(Acne) Mode: 강한 에너지 한 번으로 화농성 여드름 응고 및 여드름균 사멸\n\n[국산프리미엄] T(Toning) Mode: 연속적인 에너지 전달로 얼굴 전체 피지선 위축(→ 피지 분비 감소) 및 피부 재생(표피~진피 상단) · 다운타임 1~2주\n[주의] 4회 주기 중 1·2회차는 무조건 1주 간격\n[주의] 3회차부터는 건조하거나 당기면 2주 간격으로 조정",w:"피지 분비가 많고 모공이 넓은 분 / 좁쌀여드름·비염증성 여드름으로 고민인 분 / 화농성 여드름이 있는 분 / 여드름 원인을 근본적으로 치료하고 싶은 분",c:"모공흉터",l:"핵심",v:15},
+      {n:"더마V 레드스팟토닝",t:"염증이 가라앉은 뒤 남아있는 붉은 자국을 최대한 빨리 처리해 위축성 흉터로 이어지지 않도록 유도 · 더마V 혈관 타겟 파장으로 붉은 자국 색소 선택적 제거·진정 · [주의] 1회당 20개 미만 적용 · [TIP] 붉은 자국 20개 이상일 경우 홍조레이저로 티켓팅 필요",w:"여드름 염증 후 붉은 자국이 남아있는 분 / 흉터로 발전하기 전 빠른 케어를 원하는 분",c:"모공흉터",l:"진입",v:14},
+      {n:"베이직 여드름 패키지",t:"구성: 그린필 + 압출 + 네오빔 + 여드름LDM\n\n[인증] 그린필: 묵은 각질을 정리해 피지 배출을 원활히\n[인증] 압출: 물리적인 Comedo 압출로 염증성 여드름의 원인 및 증상 제거\n[인증] 네오빔:\n· 염증성 여드름은 익혀서 줄어들고\n· 얼굴 전체 피지 분비량도 줄여주고\n· 피부 재생을 통해 붉은 자국도 빨리 가라앉고\n· 흉터 생성 예방",w:"가벼운 여드름·트러블로 처음 관리 시작하는 분 / 피지·모공이 넓은 10~20대 / 여드름 원인부터 자국까지 한 번에 케어하고 싶은 분",c:"모공흉터",l:"진입",v:13},
+      {n:"프리미엄 여드름 패키지",t:"베이직 여드름 패키지(그린필+압출+네오빔+여드름LDM)에 레드스팟토닝 + 염증주사 추가\n\n[인증] 레드스팟토닝: 가라앉은 염증 후 남은 붉은 자국 집중 케어\n[인증] 염증주사: 활성 염증성 여드름 빠른 진정·소염",w:"반복적·중등도 여드름과 붉은 자국이 함께 고민인 분 / 여드름 치료 후 남는 자국까지 동시에 없애고 싶은 분 / 베이직보다 강화된 케어를 원하는 분",c:"모공흉터",l:"업셀",v:14},
+      {n:"플래티넘 여드름 9주",t:"구성: 네오빔 + PTT + 스킨케어 조합 · 좁쌀여드름(비염증성·경증) 고객에게 추천 · 네오빔으로 피지·모공 관리, PTT로 살균·항염, 스킨케어로 피부 진정·재생",w:"좁쌀여드름·비염증성 여드름으로 고민인 분 / 중증이 아닌 꾸준한 관리가 필요한 분 / 장기적·체계적으로 피부 퀄리티를 높이고 싶은 분",c:"모공흉터",l:"업셀",v:15},
+      {n:"포텐자 여드름 올킬 패키지",t:"구성: 포텐자 아크네 + PTT 조합 · 포텐자 아크네로 피지샘 직접 타겟·염증 억제, PTT로 살균·항염 시너지 · 재발성·다발성 염증성 여드름 고객에게 강력 추천",w:"재발성·다발성 염증성 여드름으로 고민인 분 / 여드름이 반복적으로 계속 올라오는 분 / 근본적인 여드름 원인 치료를 원하는 분",c:"모공흉터",l:"업셀",v:14},
+      {n:"포텐자 아크네 모드",t:"구성: 포텐자 아크네 모드 + 크라이오 + 진정팩 + 스킨팁(별도) · 얼굴 전체 넓게 퍼진 화농성·재발성 여드름 집중 치료 · 포텐자 아크네 모드로 피지샘·모낭에 RF 에너지 직접 전달 → 피지 분비 억제·염증 원인 타겟 · 크라이오+진정팩으로 시술 후 즉각 진정 · [TIP] 스킨팁 추가 시 더 정밀한 타겟 치료 가능",w:"얼굴 전체에 화농성·염증성 여드름이 넓게 퍼진 분 / 재발이 잦고 피지 분비가 많은 분 / 단순 관리 수준을 넘는 집중 치료가 필요한 분",c:"모공흉터",l:"업셀",v:15},
+      {n:"플래티넘 PTT",t:"광열치료(Photothermal Therapy) · 나노 백금 입자(140nm)를 초음파로 피지선·모낭 끝까지 침투시킨 후 1064nm 레이저 조사 → 65℃ 이상 국소 열 손상으로 비정상적으로 커진 피지선 선택적 파괴 · 여드름균(P. acnes) 사멸·피지 분비 억제·모공 축소 동시 · 기존 PDT 대비 색소침착 부작용 적음 · 피부·바디 모두 시술 가능 · [TIP] 바디는 부위별 별도 티켓팅 필요: 팔뚝 / 등 상부 / 등 하부 / 허벅지 앞 / 허벅지 뒤",w:"만성·재발성 여드름으로 약이나 연고로 해결 안 된 분 / 피지 분비가 많고 모공이 넓은 분 / 얼굴·바디 트러블이 지속되는 분",c:"모공흉터",l:"업셀",v:14}
+    ]},
+    {name:"모공·흉터",items:[
+      {n:"포텐자 펌핑팁",brands:[
+        {n:"펌핑팁",t:"RF 에너지로 모낭·피지선 직접 자극 → 피지 분비 억제·모공 수축 · 초음파로 PDRN 등 유효성분을 피지선 깊숙이 강제 침투 → 피부재생 극대화 · [TIP] 팁 가격 50,000원 별도",w:"모공이 넓고 피부결이 거친 분 / 유효성분을 깊이 침투시켜 효과를 극대화하고 싶은 분",c:"모공흉터",l:"진입",v:14},
+        {n:"펌핑 부스트업",t:"펌핑팁 + 스킨부스터 추가 선택 · 스킨부스터: PDRN 3cc / 연어물광 3cc / 리쥬란힐러 2cc / 쥬베룩+물광 3.5cc · [TIP] 시너지: 펌핑팁으로 모공 열고 부스터 깊숙이 침투 → 모공 축소+피부재생 동시 극대화",w:"모공 치료와 피부재생을 한 번에 원하는 분 / 펌핑팁 효과를 더 높이고 싶은 분",c:"모공흉터",l:"업셀",v:15}
+      ],t:"포텐자 펌핑팁",c:"모공흉터",l:"진입",v:14},
+      {n:"포텐자 스킨팁",t:"극세침으로 진피층에 RF 에너지를 직접 전달 → 콜라겐 재생 촉진·모공 수축·흉터 리모델링·피부탄력 개선 동시 · 표피 손상 없이 깊은 층 치료 가능 · [TIP] 팁 가격 40,000원 별도",w:"모공·흉터·피부탄력을 한 번에 케어하고 싶은 분 / RF 에너지로 피부 리모델링을 원하는 분",c:"모공흉터",l:"진입",v:14},
+      {n:"모공탱탱 콤보",t:"구성: 클렌징 + 포텐자 스킨팁 + 더마V/클라리티 힐링 프리미엄 + 리써마모드 + 진정팩 · 한 번의 시술로 모공·흉터·피부탄력 개선 극대화",w:"모공·흉터·탄력 세 가지를 한 번에 케어하고 싶은 분",c:"모공흉터",l:"업셀",v:15},
+      {n:"모공쫀쫀 콤보",t:"구성: 클렌징 + 피코프락셀 + 더마V/클라리티 힐링 프리미엄 + 리써마모드 + 진정팩 · 피코프락셀: 표피를 보호하며 진피 깊은 층에 미세홀 형성 → 세포재생 촉진·모공 수축 · 더마V 힐링으로 재생·진정 마무리 · 다운타임 적어 부담 없이 모공 케어",w:"모공이 넓고 피부결 개선을 원하는 분 / 다운타임 적게 모공 케어하고 싶은 분",c:"모공흉터",l:"진입",v:14},
+      {n:"3D 모자이크",t:"제조사: 사이노슈어 루트로닉(Cynosure Lutronic) · 파장: 1550nm 어븀글래스(Er:Glass) · 비박피형(Non-ablative) 프락셔널 레이저 · FDA·식약처 승인 장비\n\n[TIP] 3D CCT(Controlled Chaos Technology): 강·중·약 3단계 에너지를 랜덤 패턴으로 동시 조사 → 피부 표층~진피 중층까지 다층 동시 치료 · 과열(Bulk Heating) 위험 최소화\n\n모공흉터 시술 구성: 3D 모자이크(흉터 모드) + 리써마모드 + 진정팩 · 선택 부위: 나비존/이마+관자/턱라인 또는 얼굴 전체 · 미세 격자 패턴으로 흉터 조직 리모델링·콜라겐 재생 유도 · 표피 보호하며 진피 깊숙이 작용 → 다운타임 최소화",w:"여드름 흉터·모공이 고민인 분 / 흉터 리모델링과 피부재생을 원하는 분",c:"모공흉터",l:"핵심",v:16},
+      {n:"3D 모공리셋 콤보",t:"구성: 클렌징 + 3D 모자이크(나비존/이마+관자/턱라인) + 더마V/클라리티 힐링 프리미엄 + 리써마모드 + 진정팩 · 모자이크 흉터 모드로 모공·흉터 치료 + 힐링으로 재생 마무리",w:"모공이 넓어 피부결이 거칠어 보이는 분 / 모공·흉터 치료와 재생을 함께 원하는 분",c:"모공흉터",l:"업셀",v:16},
+      {n:"위축성 흉터 줌패스",t:"3D 모자이크 옵션 · 위축성(패인) 흉터 부위 핀포인트 집중 치료 · 20개 / 50개 선택 · 모자이크 시술과 병행 시 시너지 우수",w:"패인 여드름 흉터가 있는 분 / 흉터 부위를 집중적으로 치료하고 싶은 분",c:"모공흉터",l:"업셀",v:13},
+      {n:"포텐자 펌핑팁×쥬베룩 패키지",t:"8주 집중 · 미세모공·다운타임 최소화 패키지 · 루비필·모공톡신·포텐자 펌핑팁·PDRN·쥬베룩+물광·줄기세포PDRN 등 매 회 다른 구성 조합 · 피부 표면 손상 최소화하며 모공·피부재생 집중 케어 · 일상 복귀 빠른 분께 적합",w:"미세모공·피부결 개선을 원하는 분 / 다운타임 없이 꾸준히 관리하고 싶은 분 / 최고 수준의 피부 퀄리티 업을 원하는 분",c:"모공흉터",l:"업셀",v:17},
+      {n:"3D 모공흉터감소 패키지",t:"8주 집중 · 깊은 흉터 + 스킨부스터 패키지 · 쥬베룩+물광(5cc) 포함 · 모자이크3D·흉터줌패스로 흉터 조직 직접 리모델링 + 쥬베룩+물광으로 콜라겐 재생·수분 동시 충전 → 깊은 흉터 개선과 피부 재생을 함께",w:"깊은 여드름 흉터와 모공이 복합적으로 심한 분 / 흉터 치료와 스킨부스터 효과를 동시에 원하는 분",c:"모공흉터",l:"업셀",v:16},
+      {n:"내맘대로 3D 모공흉터감소",t:"[TIP] 금액 부담이 있을 시 추천드리는 가성비 실속 하위옵션 · 4주 맞춤 프로그램 · 클라리티 클리어올·모자이크3D·흉터줌패스·골드PTT·쥬베룩 1cc·모공톡신 조합 · 원하는 구성으로 맞춤 설계",w:"금액 부담 없이 모공·흉터를 효율적으로 개선하고 싶은 분 / 단기 맞춤형 조합으로 실속 있게 관리하고 싶은 분",c:"모공흉터",l:"업셀",v:15}
+    ]},
+    {name:"스킨케어/기기관리",items:[
+      {n:"베이직 스킨케어",brands:[
+        {n:"아쿠아필 3단계",t:"아쿠아필 3단계 · 1단계(AHA): 글리콜산으로 표피 각질·묵은 피부 부드럽게 분해 → 2단계(BHA): 살리실산으로 모공 속 피지·블랙헤드 용해·흡입 → 3단계(HA): 히알루론산으로 즉각 수분·영양 충전 · 각질·모공·수분을 한 번에",w:"모공·각질·수분이 복합적으로 고민인 분 / 피부 정화 후 수분감을 원하는 분",c:"기타",l:"진입",v:13},
+        {n:"비타민",t:"비타민C 고농도 앰플 + 전기자극(이온토포레시스) 도입 · 전기 자극으로 피부 장벽을 열어 비타민C를 진피층 깊숙이 침투시켜 흡수율 극대화 · 멜라닌 생성 억제·항산화·피부톤 균일화·콜라겐 합성 촉진",w:"칙칙하고 피부톤이 고르지 않은 분 / 미백·항산화 관리를 원하는 분 / 잡티·기미가 신경 쓰이는 분",c:"기타",l:"진입",v:11},
+        {n:"크라이오셀",t:"극저온 냉각 에너지로 모공 수축·피부 진정·붉음증 완화 · 시술 후 쿨링 마무리로도 활용",w:"모공이 넓고 피부가 자주 달아오르는 분 / 민감하고 자극받은 피부 진정이 필요한 분",c:"기타",l:"진입",v:11},
+        {n:"재생",t:"재생 앰플·마스크 집중 공급 · 손상된 피부 장벽 회복·세포 재생 촉진 · 시술 후 회복 관리로 적합",w:"피부 장벽이 약하고 재생이 필요한 분 / 시술 후 회복 관리를 원하는 분",c:"기타",l:"진입",v:11},
+        {n:"루비필",t:"AHA(글리콜산) 계열 케미컬 필링 · 분자량 작아 피부 침투성 높음 → 묵은 각질 화학적 분해·제거 · 콜라겐·엘라스틴 생성 촉진 → 피부 탄력·밝기 개선 · 멜라닌 생성 억제 → 피부톤 균일화 · 다운타임 거의 없어 시술 후 바로 일상 복귀 가능",w:"각질·피지로 피부결이 거친 분 / 피부톤 개선·피부결 정돈을 원하는 분",c:"기타",l:"진입",v:12},
+        {n:"블랙필",t:"주성분: 발효흑초(초산 발효) + BHA 계열 · 발효흑초의 유기산이 모공 속 피지·블랙헤드를 녹여 딥클렌징 · BHA가 지용성 성분이라 모공 깊숙이 침투 → 피지 제거·모공 수축·항균 작용 · 피지 분비 많은 T존·코 부위에 특히 효과적",w:"블랙헤드·피지가 많고 모공이 넓은 분 / 딥클렌징 관리가 필요한 분",c:"기타",l:"진입",v:12},
+        {n:"산소필",t:"피부에 고농도 산소·영양 동시 공급 → 피부 활성화·칙칙함 개선·생기 부여",w:"피부가 칙칙하고 생기가 없는 분 / 피로하고 지친 피부에 활력을 원하는 분",c:"기타",l:"진입",v:11},
+        {n:"SONO",t:"초음파 에너지로 피부 진피층 세포 활성화·재생 유도 · 유효성분 침투율 극대화·피부 탄력 개선 · 다른 관리와 병행 시 흡수 효과 상승",w:"피부 재생·탄력 개선을 원하는 분 / 유효성분 침투 효과를 높이고 싶은 분",c:"기타",l:"진입",v:11},
+        {n:"옵션",t:"별도 추가: LED / 스티머 / 엑스로션 / 블랙헤드 압출 / 산소오투덤",w:"기본 관리에 추가 케어를 원하는 분",c:"기타",l:"진입",v:10}
+      ],t:"베이직 스킨케어",c:"기타",l:"진입",v:13},
+      {n:"PDT",t:"광역학 치료(Photodynamic Therapy) · 광감각제(아라필/클로로필 등) 도포 후 특정 파장 광원 조사 → 광감각제가 활성산소 생성 → 여드름균(P.acnes) 선택적 사멸 · 피지선 직접 타겟 → 피지 분비 억제·모공 수축 · 항염·살균 작용으로 여드름 재발 방지 · 약물 없이 광학적으로 치료하는 비침습 시술",w:"피지 분비가 많고 여드름이 자주 재발하는 분 / 항생제·약물 치료에 한계를 느끼는 분 / 살균·항균 관리를 원하는 분",c:"기타",l:"진입",v:12},
+      {n:"알라딘필",brands:[
+        {n:"얼굴 알라딘필",t:"주성분: 담수해면 스파큘(미세침) + 해초 추출물 · 스파큘이 각질세포층에 침투해 미세 이물반응 유도 → 자연스러운 표피재생·피부 턴오버 촉진 · 해초 성분의 항균·항염·보습 효과로 모공 정화 후 피부 장벽 강화 · 화학 박피제 없는 천연 성분이라 자극 최소화 | [주의] 상담 필수 안내 · 시술 직후 피부가 약간 붉어질 수 있으나 정상 반응 · 각질은 시술 후 2~3일 뒤부터 서서히 탈각되기 시작 — 억지로 제거하면 색소침착 위험이 있으므로 자연 탈각 안내 필수 · 당일 샤워 시 물·비누 자극이 시술 부위 흡수된 성분을 희석시키고 피부 재생을 방해할 수 있어 당일 샤워 권장하지 않음 — 다음날 미온수 세안부터 권장",w:"모공이 넓고 피지·블랙헤드가 많은 분 / 각질 정화와 피부 재생을 원하는 분 / 화학 필링이 부담스러운 분",dur:"권장주기 4주",c:"기타",l:"진입",v:12},
+        {n:"바디 알라딘필",t:"부위 선택: 등상완 / 팔하완 / 팔상완 / 가슴상완 / 가슴하완",w:"바디 여드름·모공·피지가 고민인 분 / 등·팔·가슴 트러블 케어가 필요한 분",dur:"권장주기 4주",c:"기타",l:"진입",v:12}
+      ],t:"담수해면 스파큘(미세침)+해초 추출물 복합 필링 · 스파큘이 각질세포층 침투 → 자연스러운 표피재생 유도 · 화학성분 없는 천연 성분으로 자극 최소화 · 항균·항염·보습 효과",c:"기타",l:"진입",v:12},
+      {n:"클리어젯",t:"수류(Water Jet) 압력 + 음압 흡입 방식 모공 딥클렌징 기기 · 스티머로 모공 열기 → 코피지 솔루션으로 피지 연화 → 음압 흡입으로 모공 깊숙한 피지·블랙헤드 제거 · 화학 성분 없이 물리적 클렌징 · 시술 직후 즉각 효과 체감 · [TIP] 피지 많은 T존·코 부위에 특히 효과적",w:"블랙헤드·피지로 모공이 막힌 분 / 딥클렌징 효과를 즉각 체감하고 싶은 분 / 코·T존 모공 관리가 필요한 분",c:"기타",l:"진입",v:13},
+      {n:"페이보릿 스킨케어",brands:[
+        {n:"라라필",t:"로레알 개발 LHA 성분 + 알칼리 결합 필링 · 분자 입자 커 저자극 · 각질 제거+표피층 리모델링·세포 기질 재생 자극 · 모공 축소·피지 분비 정상화·여드름 개선 · 피부 장벽 전반 개선, 얇아짐 없음 · 꾸준할수록 피부 속 채워지는 효과",w:"피부 장벽 개선과 각질·모공 케어를 원하는 분 / 자극 없이 부드럽게 관리하고 싶은 분",c:"기타",l:"업셀",v:14},
+        {n:"이온자임",t:"이온토포레시스 기기로 유효성분 이온 전기 도입 · 미세 전류로 피부 장벽 열어 성분 침투율 극대화 · 비타민C·미백·보습 앰플 등 맞춤 성분 선택 · 전기 자극으로 피부 탄력·혈액순환 촉진",w:"유효성분 흡수를 극대화하고 싶은 분 / 미백·보습·탄력 케어를 원하는 분",c:"기타",l:"업셀",v:13},
+        {n:"핑크필",t:"살리실산(BHA)+AHA 복합 필링 · 에스트로겐 유사 작용의 칡(갈근) 추출물 함유 → 피부 보습·탄력·광채 개선에 도움 · 피부 턴오버 촉진·각질 분해·피지 정상화 · 여드름 자국 색소침착 방지·피부톤 개선 · 다운타임 적고 부드러운 각질 관리",w:"여드름성·지성 피부로 피지·각질이 많은 분 / 피부톤 개선과 각질 케어를 원하는 분 / 피부 탄력·광채까지 함께 케어하고 싶은 분",c:"기타",l:"업셀",v:13},
+        {n:"플라필",t:"백금(Platinum) 나노입자 함유 고기능 필링 · 백금 성분의 강력한 항산화 작용으로 활성산소 제거 → 피부 산화 스트레스 감소 · 항염·피부 진정 + 피부 재생·콜라겐 합성 촉진 · 손상 피부 회복·잔주름·피부결 개선 · 레이저·시술 후 피부 재생 관리에 적합",w:"피부 재생·탄력 개선이 필요한 분 / 항산화·항염 관리를 원하는 분 / 시술 후 회복 관리를 원하는 분",c:"기타",l:"업셀",v:14},
+        {n:"골드테라피",t:"금(Gold) 성분 함유 고영양 케어 · 항산화·항염 효과로 피부 진정·재생 촉진 · 피부 탄력·광채 개선 · 노화된 피부에 생기와 윤기 부여",w:"피부 탄력·광채를 원하는 분 / 노화로 피부가 칙칙하고 힘없어 보이는 분",c:"기타",l:"업셀",v:14},
+        {n:"물톡스",t:"보톡스 유사 펩타이드(아르기렐린 등) + 히알루론산 고농도 도입 · 아르기렐린은 보툴리눔 독소가 아닌 합성 펩타이드 화장품 성분으로, 신경전달물질 억제 작용 원리가 보톡스와 유사해 바르는 보톡스 라이크 성분으로 불림 · 표정근 이완 유도로 잔주름 완화 · 즉각적인 수분광·피부 탄력 개선 · 다운타임 없어 바로 일상 가능",w:"잔주름·수분 부족이 고민인 분 / 주사 없이 보톡스 유사 효과를 원하는 분",c:"기타",l:"업셀",v:14},
+        {n:"오투덤 산소 테라피",t:"고농도 산소·비타민C·영양 성분 동시 공급 · 피부 세포 활성화·신진대사 촉진 · 칙칙함 개선·즉각 생기·광채 부여 · 모공 청결·피부 밸런스 정돈",w:"피부가 칙칙하고 생기 없는 분 / 산소 공급으로 피부 활성화를 원하는 분",c:"기타",l:"업셀",v:13},
+        {n:"생크림필",t:"부드러운 크림 텍스처의 보습 집중 필링 · 묵은 각질 부드럽게 분해하면서 동시에 수분·영양 공급 · 건조하고 예민한 피부에도 안전 · 즉각적으로 촉촉하고 매끄러운 피부결",w:"건조하고 예민한 피부 / 각질 케어와 보습을 동시에 원하는 분",c:"기타",l:"업셀",v:13}
+      ],t:"페이보릿 스킨케어",c:"기타",l:"업셀",v:15},
+      {n:"기기관리",brands:[
+        {n:"이브시너지",brands:[
+          {n:"재생모드",t:"클렌징 + 이브시너지 재생모드 + LED + 촉촉팩 · 저강도 에너지로 피부 세포 활성화·손상 회복 촉진 · 피부 재생·진정·탄력 개선에 특화 · 시술 후 회복 관리 또는 예민한 피부에 적합",w:"피부 재생·회복이 필요한 분 / 시술 후 관리 및 피부 컨디션 개선을 원하는 분",c:"기타",l:"업셀",v:14},
+          {n:"리프팅모드",t:"클렌징 + 이브시너지 리프팅모드 + LED + 촉촉팩 · 고강도 에너지로 진피층 자극·콜라겐 생성 촉진 → 비침습 리프팅·탄력 강화 · 처짐·탄력 저하 개선에 특화",w:"피부 처짐·탄력 저하가 시작된 분 / 기기 리프팅 관리를 원하는 분",c:"기타",l:"업셀",v:14}
+        ],t:"고주파(RF) 에너지 기반 피부 관리 기기 · 피부 진피층에 열 에너지 전달 → 콜라겐 수축·재생 유도 · 통증 적고 다운타임 없어 꾸준한 정기 관리에 적합 | [국산프리미엄] 재생모드: 저강도 에너지로 피부 세포 활성화·손상 회복 촉진 → 재생·진정·탄력 개선 / 시술 후 예민한 피부·회복 관리에 적합 | [수입] 리프팅모드: 고강도 에너지로 진피층 자극·콜라겐 생성 촉진 → 비침습 리프팅·탄력 강화 / 처짐·탄력 저하 개선에 특화",c:"기타",l:"업셀",v:14},
+        {n:"인텐스 울트라",t:"차세대 HIFU(고강도 집속 초음파) 기기 · 초음파 에너지를 피부 표면 손상 없이 진피층(1.5mm)·근막층(3.0·4.5mm) 등 원하는 깊이에 정밀 집속 → 해당 층에서 순간적으로 65~70°C 열 발생 · 즉각적 콜라겐 수축 + 3~6개월에 걸친 신생 콜라겐 생성 → 탄력·리프팅·페이스라인 개선 · 기존 HIFU 대비 에너지 밀도 높고 전달 균일도 우수",w:"피부 탄력·리프팅 개선을 원하는 분 / HIFU 리프팅 효과를 관리로 원하는 분",c:"기타",l:"업셀",v:15},
+        {n:"LDM 재생",t:"초음파 기반 피부 재생 관리 · 고밀도 초음파 진동 에너지로 피부 진피층 세포 활성 유도 → 방어력·재생력 강화 · [주의] 원장님 진료 하에 간호조무사 자격증 소지자만 관리 가능 · [TIP] 인텐스 울트라(HIFU)와 차이: 인텐스 울트라는 초음파를 진피·근막층 특정 깊이에 집속해 해당 지점에서 고온(65~70°C) 발생 → 콜라겐 수축·리프팅이 목적인 치료 기기, LDM은 집속 없이 전체적으로 초음파 진동·자극을 주어 세포 재생·진정에 특화된 관리 기기",w:"피부 재생·방어력 강화를 원하는 분 / 예민하고 손상된 피부 회복이 필요한 분 / 시술 후 회복 관리를 원하는 분",c:"기타",l:"업셀",v:14},
+        {n:"코레지 글러브",t:"다중파장 고주파 공명파로 피부 세포 활성화·재생 유도 · cell fitness 작용으로 탄력·주름·피부결·여드름 개선 · 통증·다운타임 거의 없음 ('청담리프팅')",w:"피부 탄력·주름·피부결을 종합 개선하고 싶은 분 / 고주파 기기 관리를 선호하는 분",c:"기타",l:"업셀",v:14},
+        {n:"코레지 도자",t:"코레지 시스템의 도자(Doza) 핸드피스 · QMR 양자공명 기술 기반 · 에그보다 넓은 면적 커버 가능 · 복부·허벅지 등 바디 부위 타이트닝에도 활용",w:"넓은 부위의 타이트닝을 원하는 분 / 바디와 얼굴 겸용 관리를 원하는 분",c:"기타",l:"업셀",v:13},
+        {n:"리써마 모드",t:"고주파(RF) 에너지를 피부 진피층에 균일하게 전달 · 콜라겐 수축·재생 유도 · 모공 시술 후 마무리 타이트닝에 최적 · [TIP] 포텐자·모자이크3D 시술 후 병행 시 효과 극대화",w:"모공·흉터 시술 후 마무리 타이트닝을 원하는 분 / 기기 관리로 피부 탄력 개선을 원하는 분",c:"기타",l:"업셀",v:12}
+      ],t:"[TIP] 이벤트 항목은 10분으로 통일",tip:"[TIP] 이벤트 항목은 10분으로 통일",c:"기타",l:"업셀",v:14}
+    ]},
+    {name:"제모",items:[
+      {n:"젠틀맥스 프로플러스",t:"듀얼 파장(755nm 알렉산드라이트 + 1064nm Nd:YAG) 레이저 · 모든 피부 타입·모든 모발 컬러에 대응 가능 · DCD(Dynamic Cooling Device) 쿨링으로 통증 최소화 · [TIP] 시술 가능 부위: 겨드랑이/인중/앞턱/풀페이스/팔상완/팔하완/손등+손가락/종아리+무릎/허벅지/배+배렛나루/비키니 등 전신",w:"레이저 제모를 원하는 분 / 통증 적은 제모를 원하는 분 / 다양한 부위 제모를 원하는 분",c:"기타",l:"진입",v:14},
+      {n:"클라리티 바디 토닝",t:"클라리티 레이저를 바디 부위에 적용 · 바디 색소·톤·피부결 개선 · 프리미엄 바디토닝: 클라리티 바디토닝 + 피코케이/피코플러스 바디토닝 조합",w:"바디 피부 톤·결 개선을 원하는 분 / 몸의 색소침착이 고민인 분",c:"색소",l:"진입",v:12}
+    ]}
+  ]},
+  {name:"리프팅",subs:[
+    {name:"프리미엄 리프팅",brandInfo:"[추천] 우선순위 권유 리프팅\n리프팅 상담 시 무조건 프리미엄 리프팅 먼저 권유할 것\n울쎄라·써마지는 리프팅 효과의 깊이와 지속력이 스탠다드 대비 우수 · 우리 병원 핵심 리프팅 라인업",items:[
+      {n:"울쎄라피 프라임",t:"집속 초음파(HIFU) · 4~7MHz · 제조사: Merz(미국) · 실시간 초음파 영상 장치 내장 → 근막층(SMAS, 4.5mm) 위치 확인하며 정밀 시술 가능 · 비수술 리프팅 중 가장 깊은 층(SMAS) 타겟 → 수술적 리프팅에 가장 근접한 효과\n\n[TIP] 지방량이 많은 경우 1,200샷 이상 티켓팅 추천 → 지방층이 두꺼울수록 더 많은 샷수로 에너지 충분히 전달 필요",w:"피부 처짐·탄력 저하가 뚜렷한 분 / 비수술 최고 효과를 원하는 분 / 지방량이 많아 고샷수 시술이 필요한 분",c:"리프팅",l:"1순위",v:20},
+      {n:"써마지",t:"단극성(Monopolar) RF · 6.78MHz · 제조사: Solta Medical(미국) · 역열증감률(Reverse Thermal Gradient) 원리 — 표피는 냉각하면서 진피층(2~3mm)은 균일하게 가열 → 콜라겐 수축·재생·탄력·주름 개선 · 울쎄라보다 얕은 층이지만 더 넓은 범위 가열 → 피부결·탄력·타이트닝에 특화\n\n[TIP] 아큐렙(AccuREP™) 기술: 매 샷마다 자동 튜닝 → 시술 부위별 최적 에너지 자동 조절\n[TIP] 매 샷마다 쿨링 펄스 + 전방향 진동으로 표피 보호 및 통증 완화\n[TIP] 4세대 FLX: 팁 면적 33% 증가 → 시술 시간 약 25% 단축\n[추천] 울쎄라와 병행 시 시너지 극대화(울쎄라로 깊은 층, 써마지로 얕은 층 동시 커버)",w:"피부 탄력·주름·피부결을 동시에 개선하고 싶은 분 / 지방 소실 없이 탄력 개선을 원하는 분",c:"리프팅",l:"1순위",v:19},
+      {n:"온다",t:"온다",w:"",c:"리프팅",l:"1순위",v:17},
+      {n:"온다 드레인 프로그램",t:"온다리프팅 50,000J + T노스 6cc 조합 · 온다로 조직 열자극·콜라겐 재생 유도 후 T노스로 노폐물 배출 촉진 · 리프팅+드레인 동시 효과",w:"리프팅과 함께 부기·노폐물 배출을 원하는 분 / 온다리프팅의 효과를 극대화하고 싶은 분",c:"리프팅",l:"1순위",v:16}
+    ]},
+    {name:"스탠다드 리프팅",brandInfo:"스탠다드 리프팅\n고주파(RF) 또는 집속 초음파(HIFU) 기반 관리형 리프팅",items:[
+      {n:"초음파(HIFU)",brands:[
+        {n:"슈링크 유니버스",t:"집속 초음파(HIFU) 기반 리프팅 기기 · 진피층 깊이 초음파 에너지 집속 → 콜라겐 수축·재생으로 리프팅·탄력 개선 · 다운타임 거의 없어 일상 복귀 빠름 · [TIP] 샷수별 적용 부위 안내\n300샷 → 턱라인\n400샷 → 턱라인 + 팔자윗살\n600샷~1800샷 → 하관 전체",w:"처짐이 시작된 하관·턱라인 개선을 원하는 분 / 다운타임 없이 리프팅 효과를 원하는 분 / 리프팅 입문 또는 정기 유지 관리를 원하는 분",c:"리프팅",l:"2순위",v:15},
+        {n:"리프테라",t:"집속 초음파(HIFU) 기반 리프팅 기기 · [TIP] 현재 본원 펜 타입만 사용 중 → 정밀한 부위별 집중 시술 가능 · 목주름까지 시술 가능 · [주의] 목주름 포함 진행 시 최소 10,000샷 안내 필요",w:"얼굴 리프팅과 목주름까지 함께 케어하고 싶은 분 / 정밀한 부위별 집중 리프팅을 원하는 분",c:"리프팅",l:"2순위",v:13},
+        {n:"아이볼뉴머",t:"볼뉴머 200샷 · 눈가 전용 리프팅 · 눈 밑·눈가·이마 등 섬세한 부위에 특화된 소샷수 리프팅",w:"눈가 처짐·탄력이 고민인 분 / 눈가 집중 리프팅을 원하는 분",c:"리프팅",l:"2순위",v:12},
+        {n:"스페셜 슈링크",t:"슈링크 유니버스 100샷 단위 특수 부위 시술 · V라인/아이/목주름 타겟 · 특정 부위 집중 리프팅에 적합 · [TIP] 리프팅 시술 옵션으로 추가 가능",w:"V라인·눈가·목주름 등 특정 부위 집중 리프팅을 원하는 분",c:"리프팅",l:"2순위",v:11}
+      ],t:"초음파(HIFU) 계열",c:"리프팅",l:"2순위",v:14},
+      {n:"고주파(RF)",brands:[
+        {n:"인모드",t:"FX: 양극성(Bipolar) RF · 지방층 타겟 · FORMA: 양극성(Bipolar) RF · 진피층 타겟 · FX 모드로 지방세포 분해 가능\n\n[TIP] 시술 시간이 길수록 효과 우수 — 상담 시 충분한 시술 시간 확보 권유\n\n[TIP] 데옥시콜산·윤곽주사 병행 시 시너지 우수 — FX 모드로 지방세포 약화 후 주사 병행 시 지방분해 효과 극대화\n\nFX+FORMA 패키지 → FX 단독으로 시간 길게 변경 가능\n· FX 단독으로 시술 시간 길게 진행 시 지방세포 분해에 더 집중 가능\n· FX+FORMA 패키지 유지 시 → FORMA는 이마 시술 시 화상 위험이 있어 가급적 하관 위주로 진행 권장\n\n[주의] FORMA 이마 화상 주의\nFORMA는 단극성(Monopolar) RF 방식으로 에너지가 피부 깊이 투과됨 · 이마는 피하지방층이 얇고 골막과 가까워 열 축적이 빠르고 냉각이 어려워 화상 위험 높음 · 반드시 하관(볼·턱·목) 위주 시술 권장",w:"지방·탄력을 동시에 케어하고 싶은 분 / 데옥시콜산·윤곽주사와 병행 관리를 원하는 분 / RF 기반 리프팅을 원하는 분",c:"리프팅",l:"2순위",v:13},
+        {n:"볼뉴머",t:"단극성(Monopolar) RF · 6.78MHz · 제조사: 클래시스(Classys, 슈링크 동일 제조사) · 수냉(Water Cooling) 쿨링 방식 · 지방분해 유도 없이 순수 리프팅·탄력 목적 · 시술 시간이 길수록 효과 우수\n\n[TIP] 써마지가 부담스러우신 분께 차선책 · 300샷~600샷 · 1개월 주기 안내\n\n볼뉴머 vs 올리지오 차이\n· 볼뉴머: 올리지오 대비 시술 시간 짧음\n\n[TIP] 상황별 티켓팅 팁: 어레인지 상황에 따라 유도 · 시간 널널하면 이벤트 항목 중 수가 높은 것 권유해 주세요",w:"리프팅·탄력 개선을 원하는 분 / 지방분해 없이 순수 리프팅 효과를 원하는 분",c:"리프팅",l:"2순위",v:14},
+        {n:"올리지오",t:"단극성(Monopolar) RF · 6.78MHz · 제조사: 원텍(Wontech) · 가스 분사식 쿨링 · 한국인 피부 최적화 설계 · 지방분해 유도 없이 순수 리프팅·탄력 목적 · 시술 시간이 길수록 효과 우수\n\n[TIP] 써마지가 부담스러우신 분께 차선책 · 300샷~600샷 · 1개월 주기 안내\n\n올리지오 vs 볼뉴머 차이\n· 볼뉴머: 올리지오 대비 시술 시간 짧음\n\n[TIP] 상황별 티켓팅 팁: 어레인지 상황에 따라 유도 · 시간 널널하면 이벤트 항목 중 수가 높은 것 권유해 주세요",w:"리프팅·탄력 개선을 원하는 분 / 시간 여유가 있어 효과 극대화를 원하는 분",c:"리프팅",l:"2순위",v:13}
+      ],t:"고주파(RF) 계열",c:"리프팅",l:"2순위",v:13}
+    ]},
+    {name:"기타 리프팅",items:[
+      {n:"클라리티라인리프팅",t:"1064nm 파장으로 진피층에 열 에너지 전달 → 콜라겐 재생·탄력 유도\n\n[TIP] 다른 리프팅 시술과 병행 시 피부 온도를 올려 시너지 극대화 → 울쎄라·써마지·HIFU 등과 복합 시술 시 효과 증대\n[TIP] 단독 진행 시 부기·멍 없어 바로 일상생활 가능 · 즉각적인 탄력 효과 체감",w:"리프팅 시술과 함께 복합 케어를 원하는 분 / 다운타임 없이 즉각적인 탄력 개선을 원하는 분 / 진피층 탄력·피부결 개선을 원하는 분",c:"리프팅",l:"2순위",v:12},
+      {n:"코레지에그리프팅",t:"QMR(양자 공명) 기술 기반 · 유럽 Telea사 특허 · 단일 파장이 아닌 16가지 공명 파장(4~64MHz)으로 피부 세포 직접 자극 → 1초에 최대 6,400만 번 세포 운동 유도\n\n[TIP] 기존 고주파(단일 파장·열 자극)와 달리 열 손상 없이 세포 운동으로 콜라겐·엘라스틴 재생 → 다운타임 거의 없음\n\n에그(Egg) 핸드피스: 부드러운 음압으로 피부 밀착 후 QMR 공명에너지 집중 전달 → 타이트닝·리프팅·볼륨감 동시 개선 · 멍 잘 들지 않음\n\n[TIP] 강한 열적 자극에 민감하거나 피부가 얇은 분께 적합 · 다른 리프팅 시술과 병행 시 피부 재생 효과 시너지",w:"다운타임 없는 리프팅을 원하는 분 / 피부가 얇고 예민해 고주파·HIFU 자극이 부담스러운 분 / 탄력·볼륨·피부결 개선을 동시에 원하는 분",c:"리프팅",l:"2순위",v:12},
+      {n:"모자이크3D리프팅",t:"1550nm 어븀글래스 프락셔널 레이저 · 스탬핑(Stamping) 방식으로 피부에 미세 자극을 주어 콜라겐 재생 유도\n\n스탬핑 방식이란?\n콜드 컴프레션 사파이어 팁을 피부에 꾹 눌러 찍는 방식 · 팁이 피부를 냉각+압박하여 표피 에너지 흡수를 줄이고 진피 깊은 층까지 에너지 전달 → 표피 보호하면서 진피 심층 콜라겐·엘라스틴 재생 유도\n\n[TIP] 눈가·입가 등 굴곡진 정밀 부위 집중 시술에 특화 · 다운타임 적어 일상 복귀 빠름",w:"여드름 흉터·모공 개선과 함께 탄력·리프팅 효과를 원하는 분 / 다운타임 없이 피부재생·탄력을 원하는 분",c:"리프팅",l:"2순위",v:12}
+    ]},
+    {name:"복합 리프팅",brandInfo:"복합 티켓팅 조합\n리프팅 기기 2개 이상 조합 시 시너지 극대화\n항목별 복합 티켓팅 조합 정리",items:[
+      {n:"모자이크3D + 단극성 고주파",t:"조합: 모자이크3D리프팅 + 단극성 고주파(써마지 / 볼뉴머)\n\n[TIP] 시너지 원리\n모자이크3D 시술 시간이 짧아(약 5분) 부담 없이 선행 가능 · 모자이크3D로 미세 자극을 준 직후 단극성 고주파 시술 시 피부 열전달이 훨씬 잘 됨 → 고주파 효과 극대화\n\n시술 순서\n마취 → 모자이크3D → 단극성 고주파(써마지/볼뉴머)",w:"리프팅 효과를 극대화하고 싶은 분 / 써마지·볼뉴머 효과를 더 높이고 싶은 분",c:"리프팅",l:"업셀",v:14}
+    ]}
+  ]},
+  {name:"바디·주사",subs:[
+    {name:"다이어트 레이저",items:[
+      {n:"바디 온다",t:"마이크로파(Microwave) 에너지 기반 지방분해·바디 리프팅 복합 기기 · 지방세포를 열로 분해하고 체내 대사를 촉진하여 지방 배출 · 콜라겐·엘라스틴 생성 촉진 → 피부 탄력 개선 · 체형 개선 및 피부탄력 증진 동시 목표 · 비침습적 시술로 회복기간 짧음 · [TIP] 자유이용권 패키지 운영 중 (30만원대~) / 지방분해주사와 병행 시 효과 극대화",w:"지방분해와 바디 리프팅을 동시에 원하는 분 / 셀룰라이트와 피부 탄력 저하가 고민인 분 / 비침습으로 빠른 일상 복귀를 원하는 분",c:"바디",l:"핵심",v:17},
+      {n:"바디 인모드",t:"불필요한 지방 세포 사멸 + 표피층·진피층 콜라겐 생성 및 엘라스틴 촉진 → 안티에이징 바디 리프팅 · 1부위 8분 진행 · [TIP] 지방분해주사와 찰떡 궁합 — 병행 시 지방분해+리프팅 시너지 극대화 · 1회 150,000원 / 4회 550,000원 / 8회 990,000원",w:"지방 사멸과 바디 탄력 회복을 동시에 원하는 분 / 리프팅 효과가 있는 바디 관리를 원하는 분",c:"바디",l:"핵심",v:16},
+      {n:"바디 슈링크",t:"초음파(HIFU) 기반 바디 리프팅 기기 · 피부 표면 손상 없이 근막(SMAS)층에 에너지 집속 → 늘어진 조직 수축·리프팅 효과 · 아래 팔뚝살·복부 늘어짐·러브핸들에 강력 추천 · 1회 150,000원 / 4회 550,000원 / 8회 990,000원 · [TIP] 지방분해주사와 병행 시 라인 개선 효과 배가",w:"팔뚝살·복부 늘어짐·러브핸들 개선을 원하는 분 / 피부 손상 없이 리프팅 효과를 원하는 분",c:"바디",l:"핵심",v:16},
+      {n:"노블쉐이프",t:"의료용 레이저·저주파·고주파 3가지 복합 에너지로 셀룰라이트 분해·바디라인 탄력 개선 · 비침습 바디 관리 시술 · 30분 진행 · 1회 70,000원 / 4회 220,000원 / 8회 400,000원 · [TIP] 슬림라인주사 병행 시 지방분해 시너지 우수 / 데옥시콜산 병행 시 효과 극대화",w:"복부·팔뚝·허벅지 등 국소 지방이 고민인 분 / 셀룰라이트 개선을 원하는 분 / 운동·식이요법으로 안 빠지는 부위 집중 케어를 원하는 분",c:"바디",l:"진입",v:14}
+    ]},
+    {name:"다이어트 주사",items:[
+      {n:"데옥시콜산",t:"식약처 허가 지방분해 주사 · 지방 세포막을 직접 파괴하여 기존 지방분해 주사로 해결 어려웠던 부위 집중 개선 · 팔뚝·부유방·복부 타겟 · [TIP] 노블쉐이프·바디 온다와 병행 시 효과 극대화",brands:[{n:"부유방\n타겟"},{n:"팔뚝\n타겟"},{n:"팔뚝+부유방\n복합"}],w:"팔뚝살·부유방·복부 지방이 고민인 분 / 기기만으로 해결 안 되는 부위 집중 케어를 원하는 분",c:"수액",l:"업셀",v:18},
+      {n:"마운자로",t:"성분: 티르제파타이드(Tirzepatide) · GLP-1 + GIP 이중 수용체 작용제 (GLP-1 단독이 아님) · 주 1회 자가투여(펜형) · GLP-1으로 포만감·식욕 억제 + GIP으로 혈당 조절·지방 대사 동시 작용 → 현존 비만치료제 중 최강 감량 효과 · 체중 최대 20% 이상 감량 가능 · [주의] 아직 국내 비만 적응증 허가 없음 — 처방 전 확인 필수",w:"위고비로도 효과 부족했던 분 / 최고 수준의 감량 효과를 원하는 분 / 혈당 조절도 함께 필요한 분",c:"수액",l:"업셀",v:19},
+      {n:"메타핏\n(위고비 계열)",t:"성분: 세마글루타이드(Semaglutide) · GLP-1 수용체 작용제 · 일론머스크 다이어트 주사로도 불림 · 주 1회 자가투여(펜형) · 삭센다보다 반감기 길어 주 1회로 충분 · 체중 최대 15% 감량 효과 — 삭센다 대비 약 2배 강력 · [주의] 처방 전 재고 확인 필수",w:"삭센다 효과가 부족했던 분 / 매일 주사가 번거로운 분 / 더 강력한 식욕억제 효과를 원하는 분",c:"수액",l:"핵심",v:18},
+      {n:"삭센다\n(식욕억제주사)",t:"성분: 리라글루타이드(Liraglutide) · GLP-1 수용체 작용제 · 식약처·FDA 비만치료 허가 · 매일 1회 자가투여(펜형) · 뇌 시상하부에 포만감 신호 전달 → 식욕 억제·음식 섭취량 감소 · 체중 6~8% 감량 효과 · [TIP] GLP-1 계열 처음 도전하는 분께 진입 추천",w:"식욕 조절이 어려운 분 / GLP-1 계열 주사를 처음 시작하는 분 / 꾸준한 자가관리가 가능한 분",c:"수액",l:"핵심",v:17},
+      {n:"슬림라인주사\n500cc",t:"복부·허벅지·러브핸들 등 대부위 강력 추천 · 삼투압 원리로 단시간 내 지방세포 파괴·분해 · [주의] 비스테로이드 변경 시 회당 10,000원 추가 — 반드시 안내 · [TIP] 노블쉐이프·바디 온다와 병행 시 시너지 극대화",w:"복부·허벅지·러브핸들 등 넓은 부위 지방이 고민인 분 / 기기 치료와 주사 병행 관리를 원하는 분",c:"수액",l:"핵심",v:15},
+      {n:"스팟\n지방분해주사\n100cc",t:"삼투압 원리로 단시간 내 지방세포 파괴·분해 · 국소 소부위 스팟 타겟 · [주의] 비스테로이드 변경 시 10,000원 추가 — 반드시 안내 · [TIP] 팔뚝·아랫배 등 핀포인트 부위에 바디핏과 병행 가능",w:"특정 소부위 집중 지방분해를 원하는 분 / 가성비 있는 스팟 관리를 원하는 분",c:"수액",l:"진입",v:13},
+      {n:"바디핏주사\n40cc",t:"지방분해를 시켜줌과 동시에 림프계 순환 촉진 → 체내 지방·노폐물 배출 원활 · 국소부위 팔뚝·러브핸들·아랫복부(똥배) 타겟으로 강추 · [주의] 비스테로이드 변경 시 회당 10,000원 추가 — 반드시 안내 · [TIP] 종아리 바디보톡스와 함께 구성 시 핫라인톡신 패키지 적용",w:"팔뚝·러브핸들·아랫복부 집중 관리를 원하는 분 / 핫라인톡신 패키지와 연계 관리를 원하는 분",c:"수액",l:"진입",v:13}
+    ]},
+    {name:"항노화",brandInfo:"항노화주사 구성 안내\n▶ BASIC (5종 기본 조합): 1회 29,000원 / 10회 250,000원\n   글루타치온·아이델라·비타민C·비타민D·마늘주사\n▶ PREMIUM 택1 (갱년기·면역·호르몬): 1회 49,000원 / 10회 390,000원\n   태반주사(복부)·티모신주사(엉덩이)·감초주사(수액)\n▶ PREMIUM 고용량 아르기닌: 1회 59,000원 / 10회 450,000원\n▶ 마이어스 칵테일: 1회 99,000원 / 10회 890,000원\n\n상담 시 고객 컨디션·목적에 따라 BASIC 기본 구성 후 PREMIUM 업셀 권장",items:[
+      {n:"글루타치온\n[BASIC]",t:"[BASIC 기본구성 · 1회 29,000원] 미백 효과와 간 해독 기능까지 잡아 맑고 고운 피부결 완성 · 체내 최강 항산화 물질 · 활성산소 제거·멜라닌 생성 억제 · [TIP] 비타민C와 병행 시 효과 2배 — 비타민C가 산화된 글루타치온을 환원형으로 재생시켜 지속력↑",w:"칙칙한 피부톤·기미·잡티가 고민인 분 / 피로 회복·간 해독을 원하는 분 / 항산화 기본 관리를 원하는 분",c:"수액",l:"핵심",v:16},
+      {n:"아이델라\n[BASIC]",t:"[BASIC 기본구성 · 1회 29,000원] 항산화 효과와 체지방 감소에 도움 · 세포 내 산화 스트레스 차단·체지방 대사 활성화 · [TIP] 다이어트 주사와 병행 시 항산화+지방분해 시너지",w:"항산화 관리와 함께 체지방 감소를 원하는 분 / 다이어트와 항노화를 동시에 케어하고 싶은 분",c:"수액",l:"핵심",v:15},
+      {n:"비타민C\n[BASIC]",t:"[BASIC 기본구성 · 1회 29,000원] 항산화 효과·식욕 및 체력증진·구내염 완화·피로회복 · 콜라겐 합성 촉진·면역력 강화·피부 미백 · [TIP] 글루타치온과 세트 시 시너지 극대화",w:"면역력 강화·피부 미백을 원하는 분 / 피로 회복·체력증진이 필요한 분 / 구내염 완화·항산화 기본 관리를 원하는 분",c:"수액",l:"핵심",v:15},
+      {n:"비타민D\n[BASIC]",t:"[BASIC 기본구성 · 1회 29,000원] 항염·체내 기능 활성화와 함께 미백과 피부염 억제 · 면역 조절·뼈 건강·세포 분화 정상화 · 결핍 시 면역 저하·피로·우울감·피부 트러블 악화",w:"면역력·체내 기능 저하가 고민인 분 / 피부 트러블·피부염이 반복되는 분 / 항염·미백 관리를 원하는 분",c:"수액",l:"핵심",v:14},
+      {n:"마늘주사\n(비타민B1)\n[BASIC]",t:"[BASIC 기본구성 · 1회 29,000원] 주성분: 비타민B1(티아민) · 세포내 영양결핍 회복·피로회복 · 탄수화물 대사 핵심 조효소 — 에너지 생성·신경 기능 유지 · 만성 피로·무기력·식욕 저하 개선",w:"만성 피로·무기력·손발 저림이 고민인 분 / 세포내 영양결핍 회복을 원하는 분 / 체력증진·에너지 보충이 필요한 분",c:"수액",l:"진입",v:13},
+      {n:"태반주사\n[PREMIUM]",t:"[PREMIUM 택1 · 1회 49,000원 / 10회 390,000원] 투여: 복부 주사 · 피부결·안면 홍조·식욕 부진·생리통·전신 무기력 및 만성 피로 등 갱년기 증상에 효과적 · 소화 불량·우울증·불면증 완화 · 주성분: 태반 가수분해물 — 세포 성장인자·아미노산·활성 펩타이드 복합 · [추천] 갱년기·호르몬 불균형이 고민인 분께 1순위 추천",w:"갱년기 증상·호르몬 불균형이 고민인 분 / 피부결·안면 홍조 개선을 원하는 분 / 전신 피로·불면증 완화를 원하는 분",c:"수액",l:"업셀",v:17},
+      {n:"티모신주사\n[PREMIUM]",t:"[PREMIUM 택1 · 1회 49,000원 / 10회 390,000원] 투여: 엉덩이 주사 · 피부결·전신 무기력 및 만성 피로·불면증 완화 · 주성분: 티모신 알파1(Thymosin α1) — 면역 조절 펩타이드 · T세포 활성화·자연살해세포(NK cell) 기능 강화·항바이러스 면역 증강 · [추천] 면역력·반복 감염이 걱정되는 분께 추천",w:"면역력 저하·반복 감염이 고민인 분 / 항노화 + 면역 강화를 동시에 원하는 분 / 만성 피로·무기력 개선을 원하는 분",c:"수액",l:"업셀",v:16},
+      {n:"감초주사\n[PREMIUM]",t:"[PREMIUM 택1 · 1회 49,000원 / 10회 390,000원] 투여: 수액(정맥) · 피부결·소화 불량·우울증 완화 · 주성분: 글리시리진(Glycyrrhizin) — 강력한 항염·항바이러스·간 보호 작용 · 활성산소 억제·면역 조절·피부 알레르기·아토피 완화 · 간 수치 개선 · [추천] 음주 잦거나 간 기능이 걱정되는 분께 추천",w:"간 기능 개선·보호를 원하는 분 / 항염·피부 트러블·아토피가 고민인 분 / 음주 후 간 해독 관리를 원하는 분",c:"수액",l:"업셀",v:15},
+      {n:"고용량\n아르기닌\n[PREMIUM]",t:"[PREMIUM · 1회 59,000원 / 10회 450,000원] 투여: 수액(정맥) · 근육 강화·기초 대사 증가·체지방 감소·요요 방지 · 성적 기능 향상·우울증 개선·혈당 대사 개선 · 아르기닌은 일산화질소(NO) 전구체 → 혈관 확장·혈행 개선·세포 재생 촉진 · [TIP] 다이어트 시작 전 기초 대사 올리고 싶은 분께 강추",w:"근육 강화·체지방 감소·요요 방지를 원하는 분 / 기초 대사·혈행 개선이 필요한 분 / 우울증·혈당 대사 개선을 원하는 분",c:"수액",l:"업셀",v:15},
+      {n:"마이어스\n칵테일",t:"[1회 99,000원 / 10회 890,000원] 투여: 수액(정맥) · 마그네슘·칼슘·비타민B·비타민C 혼합 맞춤 정맥 주사 · 뛰어난 항산화 효소 성분 — 해독·활성산소 중화·면역 활성화·노화 억제 · 미네랄+비타민 복합으로 전신 컨디셔닝 · [TIP] BASIC+PREMIUM으로도 채워지지 않는 종합 컨디션 관리에 적합",w:"전신 피로·면역 저하가 고민인 분 / 종합 항산화·항노화 집중 관리를 원하는 분 / 미네랄·비타민 복합 보충이 필요한 분",c:"수액",l:"업셀",v:16},
+      {n:"가다실 9가",t:"자궁경부암 예방 백신 · 남녀 모두 접종 가능 · HPV(인유두종바이러스) 9가지 유형 동시 예방 · 총 3회 접종 완료 시 자궁경부암·항문암·생식기 사마귀 등 예방 · 1회 200,000원 / 3회 580,000원 · [추천] 성별 무관 — 감염 전 접종 시 예방 효과 극대화",w:"자궁경부암 예방을 원하는 분 / HPV 감염 예방이 필요한 분 / 파트너와 함께 접종을 원하는 분",c:"수액",l:"핵심",v:15},
+      {n:"비타밸런스\n항노화 칵테일",t:"구성: 아르기닌 + 비타민B5 + 엘카르니틴 · 근육 강화·지방 대사 촉진·에너지 생성 동시 · 운동 전후 체력 증진 및 다이어트 보조",w:"운동·다이어트와 병행하여 체력 증진을 원하는 분 / 기초 대사를 높이고 싶은 분",c:"수액",l:"업셀",v:14},
+      {n:"팻버닝\n아르기닌",t:"고용량 아르기닌 + 지방 연소 촉진 성분 · 바디 시술(온다·슈링크·인모드) 병행 시 지방분해 시너지 극대화 · 수면 바디 컨투어링 프로그램 필수 구성",w:"바디 시술과 함께 지방 연소를 극대화하고 싶은 분",c:"수액",l:"업셀",v:13},
+      {n:"무통수액",t:"시술 중 통증 완화 목적 정맥 수액 · 프리미엄·수면 리프팅 시술 시 기본 포함 · 시술 시간이 긴 복합 패키지에 추천",w:"통증에 민감한 분 / 장시간 시술 시 편안함을 원하는 분",c:"수액",l:"진입",v:10}
+    ]}
+  ]}
+]};
+
+var needsTree={n:[
+  {name:"주름·처짐",color:"#A0623A",subs:[
+    {name:"미세주름",tiers:[
+      {rank:1,name:"비스포크",tag:"BEST",desc:"대표원장이 직접 진행하는 6~8가지 복합레이저 주름 맞춤 설계",programs:["비스포크 링클리셋"]},
+      {rank:2,name:"톡신+필러",tag:"추천",desc:"톡신으로 근육 이완 + 필러로 주름 채움",programs:["주름톡신","미세주름 필러"]},
+      {rank:3,name:"톡신+부스터",tag:"추천",desc:"톡신 이완 + 콜라겐·피부 재생 부스터 병행",programs:["주름톡신","쥬베룩","리쥬란"]},
+      {rank:4,name:"톡신 단독",tag:"진입",desc:"보톡스/스킨톡신 단독",programs:["주름톡신","더모톡신"]}
+    ]},
+    {name:"팔자주름",tiers:[
+      {rank:1,name:"비스포크",tag:"BEST",desc:"대표원장이 직접 진행하는 6~8가지 복합레이저 주름 맞춤 설계",programs:["비스포크 링클리셋"]},
+      {rank:2,name:"실+필러 복합",tag:"추천",desc:"잼버실로 조직 지지 + 필러로 볼륨 복원",programs:["팔자주름개선","볼륨 필러"]},
+      {rank:3,name:"필러 단독",tag:"진입",desc:"주름필러 단독 개선",programs:["미세주름 필러","볼륨 필러"]}
+    ]},
+    {name:"목주름·손등주름",tiers:[
+      {rank:1,name:"비스포크",tag:"BEST",desc:"대표원장이 직접 진행하는 6~8가지 복합레이저 주름 맞춤 설계",programs:["비스포크 링클리셋"]},
+      {rank:2,name:"HIFU+필러",tag:"추천",desc:"초음파 리프팅 + 필러 채움 병행",programs:["리프테라","미세주름 필러"]},
+      {rank:3,name:"필러 단독",tag:"진입",desc:"주름필러 단독",programs:["미세주름 필러"]}
+    ]},
+    {name:"심부볼·이중턱·처짐",tiers:[
+      {rank:1,name:"비스포크",tag:"BEST",desc:"대표원장이 직접 진행하는 6~8가지 복합 리프팅 맞춤 설계",programs:["비스포크 리프팅"]},
+      {rank:2,name:"울써온 복합",tag:"프리미엄",desc:"울쎄라+써마지+온다 2~3종 복합",programs:["울쎄라피 프라임","써마지","온다"]},
+      {rank:3,name:"프리미엄+국산",tag:"추천",desc:"프리미엄 1종(울쎄라/써마지/온다) + 국산 1종 조합",programs:["울쎄라피 프라임","써마지","온다","볼뉴머","올리지오","슈링크 유니버스"]},
+      {rank:4,name:"국산 스탠다드",tag:"가성비",desc:"국산 기기 단독 관리",programs:["볼뉴머","올리지오","슈링크 유니버스","리프테라"]},
+      {rank:0,name:"추가옵션",tag:"",desc:"",programs:["온다 드레인 프로그램","클라리티라인리프팅","코레지에그리프팅"]}
+    ]},
+    {name:"전반적 탄력",tiers:[
+      {rank:1,name:"비스포크",tag:"BEST",desc:"대표원장이 직접 진행하는 6~8가지 복합 리프팅 맞춤 설계",programs:["비스포크 리프팅"]},
+      {rank:2,name:"RF+부스터",tag:"프리미엄",desc:"고주파 탄력 + 콜라겐 부스터 병행",programs:["써마지","레디어스","스컬트라"]},
+      {rank:3,name:"부스터 단독",tag:"추천",desc:"콜라겐 부스터/스킨부스터 단독",programs:["레디어스","스컬트라","리바이브"]},
+      {rank:4,name:"기기 관리",tag:"가성비",desc:"기기 관리형 탄력 케어",programs:["이브시너지"]}
+    ]}
+  ]},
+  {name:"볼륨·윤곽",color:"#8B6B50",subs:[
+    {name:"볼꺼짐·심부볼",tiers:[
+      {rank:1,name:"비스포크",tag:"BEST",desc:"대표원장이 직접 진행하는 맞춤 디자인 필러",programs:["비스포크 필러"]},
+      {rank:2,name:"시그니처",tag:"프리미엄",desc:"수입프리미엄 필러 + 콜라겐 부스터",programs:["레스틸렌 리프트업 필러","레디어스"]},
+      {rank:3,name:"프리미엄",tag:"추천",desc:"국산프리미엄 or 콜라겐 부스터 단독",programs:["중안부 원데이 무제한","스컬트라"]},
+      {rank:4,name:"스탠다드",tag:"가성비",desc:"가성비 볼륨 복원",programs:["볼륨 필러","쥬베룩"]}
+    ]},
+    {name:"이마·관자 꺼짐",tiers:[
+      {rank:1,name:"프리미엄",tag:"추천",desc:"이마+관자 동시 볼륨 복원",programs:["볼록 이마라인","관자필러"]},
+      {rank:2,name:"단독",tag:"진입",desc:"부위별 개별 필러",programs:["볼록 이마라인"]}
+    ]},
+    {name:"눈밑꺼짐·다크서클",tiers:[
+      {rank:1,name:"복합 케어",tag:"추천",desc:"필러+부스터+재생 복합",programs:["눈밑꺼짐 필러","쥬베룩","리쥬란"]},
+      {rank:2,name:"필러 단독",tag:"진입",desc:"눈밑 필러 단독",programs:["눈밑꺼짐 필러","엣지필러"]}
+    ]},
+    {name:"코 라인",tiers:[
+      {rank:1,name:"패키지",tag:"추천",desc:"필러+실 복합으로 오똑한 코 완성",programs:["오똑 코라인 패키지"]}
+    ]},
+    {name:"입술·입꼬리",tiers:[
+      {rank:1,name:"패키지",tag:"추천",desc:"필러+톡신 복합",programs:["탱글 앵두입술"]},
+      {rank:2,name:"필러 단독",tag:"진입",desc:"턱끝 필러 단독",programs:["뾰족 라인 필러"]}
+    ]},
+    {name:"사각턱·이중턱",tiers:[
+      {rank:1,name:"복합 슬리밍",tag:"추천",desc:"톡신+윤곽주사+지방분해 복합",programs:["슬림 턱라인 패키지","윤곽주사(T아큐)","데옥시콜산"]},
+      {rank:2,name:"톡신 단독",tag:"진입",desc:"사각턱 보톡스 단독",programs:["사각턱보톡스"]}
+    ]},
+    {name:"광대 도드라짐",tiers:[
+      {rank:1,name:"필러+주사",tag:"추천",desc:"관자 볼륨으로 광대 완화 + 윤곽주사",programs:["관자필러","윤곽주사(T아큐)"]}
+    ]}
+  ]},
+  {name:"피부결·톤",color:"#C08B5C",subs:[
+    {name:"기미·색소",tiers:[
+      {rank:1,name:"비스포크",tag:"BEST",desc:"대표원장이 직접 진행하는 6~8가지 복합레이저 색소·톤 맞춤 설계",programs:["비스포크 톤업"]},
+      {rank:2,name:"시그니처",tag:"프리미엄",desc:"총괄부원장 맞춤 설계, 개인 맞춤 색소·톤 케어",programs:["시그니처 톤업"]},
+      {rank:3,name:"올인원",tag:"추천",desc:"한 번 방문으로 색소 집중 정리",programs:["원데이 올인원 베이직","원데이 올인원 프리미엄"]},
+      {rank:4,name:"플래티넘",tag:"정기관리",desc:"정기 관리형 토닝 프로그램",programs:["플래티넘 토닝 패키지","올인원 풀토닝 패키지"]},
+      {rank:5,name:"포커스",tag:"진입",desc:"단일 레이저 엔트리 케어",programs:["클리어 코코","클라리티 클리어올","피코케이"]},
+      {rank:0,name:"추가옵션",tag:"",desc:"병행 시 효과 상승",programs:["기미주사","커스텀 레이저"]}
+    ]},
+    {name:"잡티·주근깨",tiers:[
+      {rank:1,name:"비스포크",tag:"BEST",desc:"대표원장이 직접 진행하는 6~8가지 복합레이저 색소·톤 맞춤 설계",programs:["비스포크 톤업"]},
+      {rank:2,name:"올인원",tag:"추천",desc:"한 번 방문으로 잡티 집중 정리",programs:["원데이 올인원 베이직","원데이 올인원 프리미엄"]},
+      {rank:3,name:"포커스",tag:"진입",desc:"단일 레이저 엔트리 케어",programs:["피코케이","클라리티 클리어올"]}
+    ]},
+    {name:"홍조·붉은기",tiers:[
+      {rank:1,name:"비스포크",tag:"BEST",desc:"대표원장이 직접 진행하는 6~8가지 복합레이저 홍조 맞춤 설계",programs:["비스포크 홍조"]},
+      {rank:2,name:"시그니처",tag:"프리미엄",desc:"총괄부원장 맞춤 홍조 케어 설계",programs:["시그니처 톤업"]},
+      {rank:3,name:"플래티넘",tag:"정기관리",desc:"더마V 홍조토닝 + 클라리티/더마V 힐링 정기 관리",programs:["플래티넘 홍조 패키지"]},
+      {rank:4,name:"포커스",tag:"진입",desc:"혈관레이저+힐링 엔트리 홍조 케어",programs:["피부재생 더마브이"]}
+    ]},
+    {name:"피부재생·탄력",tiers:[
+      {rank:1,name:"프리미엄",tag:"추천",desc:"ECM 부스터 + 스킨부스터 복합",programs:["엘라바에 리투오 6cc","리쥬란"]},
+      {rank:2,name:"스킨부스터",tag:"가성비",desc:"스킨부스터 단독",programs:["리쥬란","리바이브","볼륨 콜라겐"]}
+    ]},
+    {name:"수분·물광",tiers:[
+      {rank:1,name:"프리미엄",tag:"추천",desc:"부스터+물광 복합",programs:["쥬베룩물광","리쥬란"]},
+      {rank:2,name:"물광",tag:"가성비",desc:"물광 패키지 단독",programs:["모공탄력 물광 패키지","리바이브"]}
+    ]},
+    {name:"칙칙한 톤",tiers:[
+      {rank:1,name:"레이저+주사",tag:"추천",desc:"클리어올로 톤 정리 + 항산화 주사",programs:["클라리티 클리어올","글루타치온\n[BASIC]","비타민C\n[BASIC]"]},
+      {rank:2,name:"주사 단독",tag:"진입",desc:"항산화 주사로 내측부터 톤업",programs:["글루타치온\n[BASIC]","비타민C\n[BASIC]"]}
+    ]}
+  ]},
+  {name:"여드름·모공",color:"#D4A030",subs:[
+    {name:"화농성 여드름",tiers:[
+      {rank:1,name:"비스포크",tag:"BEST",desc:"대표원장이 직접 진행하는 6~8가지 복합레이저 여드름 맞춤 설계",programs:["비스포크 여드름"]},
+      {rank:2,name:"시그니처",tag:"프리미엄",desc:"총괄부원장 맞춤 여드름 케어 설계",programs:["시그니처 톤업"]},
+      {rank:3,name:"올킬",tag:"추천",desc:"RF+광열 치료 복합",programs:["포텐자 여드름 올킬 패키지"]},
+      {rank:4,name:"프리미엄",tag:"정기관리",desc:"중등도 여드름 체계적 관리",programs:["프리미엄 여드름 패키지","플래티넘 여드름 9주"]},
+      {rank:5,name:"베이직",tag:"진입",desc:"경증 여드름 진입",programs:["베이직 여드름 패키지"]}
+    ]},
+    {name:"좁쌀 여드름",tiers:[
+      {rank:1,name:"플래티넘",tag:"추천",desc:"9주 체계적 관리",programs:["플래티넘 여드름 9주"]},
+      {rank:2,name:"베이직",tag:"진입",desc:"경증 여드름 진입",programs:["베이직 여드름 패키지","네오빔"]}
+    ]},
+    {name:"붉은 자국",tiers:[
+      {rank:1,name:"레이저+부스터",tag:"추천",desc:"혈관 레이저 + 엑소좀 재생 복합",programs:["더마V 레드스팟토닝","엑소좀 레드스팟케어"]},
+      {rank:2,name:"레이저 단독",tag:"진입",desc:"레드스팟 레이저 단독",programs:["더마V 레드스팟토닝"]}
+    ]},
+    {name:"모공 넓음",tiers:[
+      {rank:1,name:"비스포크",tag:"BEST",desc:"대표원장이 직접 진행하는 6~8가지 복합레이저 모공 맞춤 설계",programs:["비스포크 모공·흉터"]},
+      {rank:2,name:"8주 집중",tag:"프리미엄",desc:"8주 집중 프로그램 (다운타임 최소)",programs:["포텐자 펌핑팁×쥬베룩 패키지"]},
+      {rank:3,name:"콤보",tag:"추천",desc:"1회 방문 복합 시술",programs:["모공탱탱 콤보","3D 모공리셋 콤보"]},
+      {rank:4,name:"진입",tag:"가성비",desc:"가성비 모공 관리",programs:["모공쫀쫀 콤보","모공탄력 물광 패키지"]}
+    ]},
+    {name:"여드름 흉터",tiers:[
+      {rank:1,name:"비스포크",tag:"BEST",desc:"대표원장이 직접 진행하는 6~8가지 복합레이저 흉터 맞춤 설계",programs:["비스포크 모공·흉터"]},
+      {rank:2,name:"8주 집중",tag:"프리미엄",desc:"8주 집중 흉터 리모델링 + 부스터",programs:["3D 모공흉터감소 패키지"]},
+      {rank:3,name:"콤보",tag:"추천",desc:"1회 복합 시술",programs:["3D 모공리셋 콤보","모공탱탱 콤보"]},
+      {rank:4,name:"가성비",tag:"가성비",desc:"4주 맞춤 실속형",programs:["내맘대로 3D 모공흉터감소"]}
+    ]},
+    {name:"피지·블랙헤드",tiers:[
+      {rank:1,name:"광열치료",tag:"추천",desc:"PTT로 피지선 근본 치료",programs:["플래티넘 PTT"]},
+      {rank:2,name:"딥클렌징",tag:"진입",desc:"기기+필링 클렌징",programs:["클리어젯","알라딘필","블랙필"]}
+    ]}
+  ]},
+  {name:"바디라인",color:"#C05030",subs:[
+    {name:"복부·러브핸들",tiers:[
+      {rank:1,name:"수면 컨투어링",tag:"BEST",desc:"온다+인모드+슈링크+바디핏+아르기닌 수면 복합",programs:["바디 온다","바디 인모드","바디 슈링크"]},
+      {rank:2,name:"프리미엄",tag:"추천",desc:"기기+주사 복합",programs:["바디 온다","슬림라인주사\n500cc"]},
+      {rank:3,name:"스탠다드",tag:"가성비",desc:"기기 1종+주사",programs:["바디 인모드","바디 슈링크","슬림라인주사\n500cc","바디핏주사\n40cc"]},
+      {rank:4,name:"진입",tag:"진입",desc:"가성비 바디 관리",programs:["노블쉐이프","슬림라인주사\n500cc"]}
+    ]},
+    {name:"팔뚝·부유방",tiers:[
+      {rank:1,name:"수면 컨투어링",tag:"BEST",desc:"온다+인모드+슈링크+바디핏+아르기닌 수면 복합",programs:["바디 온다","바디 인모드","바디 슈링크"]},
+      {rank:2,name:"프리미엄",tag:"추천",desc:"주사+기기 복합",programs:["데옥시콜산","바디 슈링크"]},
+      {rank:3,name:"스탠다드",tag:"가성비",desc:"주사 단독",programs:["데옥시콜산","바디핏주사\n40cc"]},
+      {rank:4,name:"진입",tag:"진입",desc:"톡신+주사 진입",programs:["핫 라인 톡신"]}
+    ]},
+    {name:"허벅지",tiers:[
+      {rank:1,name:"프리미엄",tag:"추천",desc:"기기+주사 복합",programs:["바디 온다","슬림라인주사\n500cc"]},
+      {rank:2,name:"스탠다드",tag:"가성비",desc:"복합기기+주사",programs:["노블쉐이프","슬림라인주사\n500cc"]},
+      {rank:3,name:"진입",tag:"진입",desc:"단일 시술",programs:["라인정리 톡신","슬림라인주사\n500cc"]}
+    ]},
+    {name:"엉덩이(힙딥)",tiers:[
+      {rank:1,name:"비스포크",tag:"BEST",desc:"스컬트라 200cc 대표원장 맞춤",programs:["비스포크 힙딥 스컬트라"]},
+      {rank:2,name:"프리미엄",tag:"추천",desc:"바디콜라겐+재생주사 250cc",programs:["비스포크 힙딥 바디 콜라겐"]}
+    ]},
+    {name:"종아리·승모근",tiers:[
+      {rank:1,name:"톡신",tag:"추천",desc:"근육 축소 톡신",programs:["라인정리 톡신","핫 라인 톡신"]}
+    ]},
+    {name:"식욕억제·다이어트",tiers:[
+      {rank:1,name:"GLP-1+GIP",tag:"최강",desc:"현존 최강 감량 효과 (이중작용제)",programs:["마운자로"]},
+      {rank:2,name:"GLP-1 (주1회)",tag:"추천",desc:"주 1회 자가투여, 삭센다 대비 2배 효과",programs:["메타핏\n(위고비 계열)"]},
+      {rank:3,name:"GLP-1 (매일)",tag:"진입",desc:"매일 1회 자가투여, GLP-1 진입",programs:["삭센다\n(식욕억제주사)"]}
+    ]}
+  ]},
+  {name:"컨디션·항노화",color:"#B8976A",subs:[
+    {name:"피로·무기력",tiers:[
+      {rank:1,name:"마이어스",tag:"프리미엄",desc:"종합 항산화·노화방지 프리미엄 수액",programs:["마이어스\n칵테일"]},
+      {rank:2,name:"BASIC",tag:"추천",desc:"기본 항노화 5종 조합",programs:["글루타치온\n[BASIC]","아이델라\n[BASIC]","비타민C\n[BASIC]","비타민D\n[BASIC]","마늘주사\n(비타민B1)\n[BASIC]"]}
+    ]},
+    {name:"면역력",tiers:[
+      {rank:1,name:"PREMIUM",tag:"추천",desc:"T세포 활성화·면역 강화",programs:["티모신주사\n[PREMIUM]"]},
+      {rank:2,name:"BASIC",tag:"가성비",desc:"비타민 보충",programs:["비타민C\n[BASIC]","비타민D\n[BASIC]"]}
+    ]},
+    {name:"갱년기·호르몬",tiers:[
+      {rank:1,name:"PREMIUM",tag:"추천",desc:"갱년기 증상 완화 (복부 주사)",programs:["태반주사\n[PREMIUM]"]}
+    ]},
+    {name:"간 해독",tiers:[
+      {rank:1,name:"PREMIUM",tag:"추천",desc:"간 보호·항염 (수액)",programs:["감초주사\n[PREMIUM]"]},
+      {rank:2,name:"BASIC",tag:"가성비",desc:"간 해독 기본",programs:["글루타치온\n[BASIC]"]}
+    ]},
+    {name:"근육·대사",tiers:[
+      {rank:1,name:"PREMIUM",tag:"추천",desc:"근육 강화·기초 대사 증가",programs:["고용량\n아르기닌\n[PREMIUM]"]}
+    ]},
+    {name:"종합 항산화",tiers:[
+      {rank:1,name:"마이어스",tag:"프리미엄",desc:"종합 항산화·노화방지 프리미엄 수액",programs:["마이어스\n칵테일"]}
+    ]},
+    {name:"예방접종",tiers:[
+      {rank:1,name:"백신",tag:"",desc:"HPV 9가지 유형 동시 예방",programs:["가다실 9가"]}
+    ]}
+  ]}
+]};
+
+// ========== PACKAGE DEFINITIONS ==========
+var packageDefs=[
+  {cat:"비스포크",items:[
+    {name:"비스포크 톤업",desc:"대표원장 6~8가지 복합레이저 색소·톤",components:["피코케이","피코플러스","클라리티 클리어올","피부재생 더마브이","기미주사","클리어 코코"]},
+    {name:"비스포크 링클리셋",desc:"대표원장 복합레이저 주름 리셋",components:["주름톡신","미세주름 필러"]},
+    {name:"비스포크 모공·흉터",desc:"대표원장 복합레이저 모공·흉터",components:["3D 모자이크","포텐자 펌핑팁","포텐자 스킨팁"]},
+    {name:"비스포크 리프팅",desc:"대표원장 복합 리프팅",components:["울쎄라피 프라임","써마지","온다"]},
+    {name:"비스포크 홍조",desc:"대표원장 복합레이저 홍조",components:["피부재생 더마브이"]},
+    {name:"비스포크 여드름",desc:"대표원장 복합레이저 여드름",components:["네오빔","포텐자 아크네 모드"]},
+    {name:"비스포크 스팟 레이저",desc:"대표원장 스팟 색소 제거",components:["피코케이","피코플러스"]},
+    {name:"비스포크 타투 리무벌",desc:"대표원장 피코레이저 3회",components:["피코케이","피코플러스"]}
+  ]},
+  {cat:"시그니처",items:[
+    {name:"시그니처 톤업",desc:"총괄부원장 맞춤 색소·톤",components:["피코케이","피코플러스","클라리티 클리어올"]}
+  ]},
+  {cat:"플래티넘",items:[
+    {name:"플래티넘 토닝 패키지",desc:"피코+힐링+LED+진정팩 정기관리",components:["피코케이","피코플러스","피부재생 더마브이"]},
+    {name:"올인원 풀토닝 패키지",desc:"클리어올+피코+힐링 올인원",components:["클라리티 클리어올","피코케이","피코플러스","피부재생 더마브이"]},
+    {name:"플래티넘 홍조 패키지",desc:"홍조토닝+힐링 정기관리",components:["피부재생 더마브이"]},
+    {name:"플래티넘 여드름 9주",desc:"네오빔+PTT+스킨케어 9주",components:["네오빔","플래티넘 PTT"]},
+    {name:"플래티넘 PTT",desc:"나노백금 광열치료",components:["네오빔"]}
+  ]},
+  {cat:"올인원·원데이",items:[
+    {name:"원데이 올인원 베이직",desc:"한 번 방문 색소 집중 정리",components:["피코케이","클라리티 클리어올"]},
+    {name:"원데이 올인원 프리미엄",desc:"흑자 포함 심화 색소",components:["피코케이","피코플러스","클라리티 클리어올"]},
+    {name:"커스텀 레이저",desc:"2~3가지 레이저 토큰 조합",components:["피코케이","피코플러스","클라리티 클리어올","네오빔","포텐자 아크네 모드"]}
+  ]},
+  {cat:"콤보",items:[
+    {name:"슬림 턱라인 패키지",desc:"사각턱+침샘톡신",components:["사각턱보톡스","침샘톡신"]},
+    {name:"핫 라인 톡신",desc:"종아리300U+바디핏40cc",components:["라인정리 톡신","바디핏주사\n40cc"]},
+    {name:"팔자주름개선",desc:"잼버실4줄+필러1cc",components:["볼륨 필러"]},
+    {name:"오똑 코라인 패키지",desc:"코필러+코실4줄",components:["눈웃음 필러"]},
+    {name:"탱글 앵두입술",desc:"입술필러+입꼬리톡신",components:["주름톡신"]},
+    {name:"뾰족 라인 필러",desc:"턱끝필러+자갈턱톡신",components:["주름톡신"]},
+    {name:"모공탱탱 콤보",desc:"포텐자스킨팁+힐링+리써마+진정팩",components:["포텐자 스킨팁","피부재생 더마브이"]},
+    {name:"모공쫀쫀 콤보",desc:"피코프락셀+힐링+리써마+진정팩",components:["피코케이","피부재생 더마브이"]},
+    {name:"3D 모공리셋 콤보",desc:"3D모자이크+힐링+리써마+진정팩",components:["3D 모자이크","피부재생 더마브이"]},
+    {name:"포텐자 여드름 올킬 패키지",desc:"포텐자아크네+PTT",components:["포텐자 아크네 모드","플래티넘 PTT"]},
+    {name:"눈밑꺼짐 필러",desc:"눈밑필러+눈가스킨보톡스",components:["엣지필러","더모톡신"]}
+  ]},
+  {cat:"집중 프로그램",items:[
+    {name:"포텐자 펌핑팁×쥬베룩 패키지",desc:"8주 집중 모공·재생",components:["포텐자 펌핑팁","쥬베룩 1cc"]},
+    {name:"3D 모공흉터감소 패키지",desc:"8주 집중 흉터+부스터",components:["3D 모자이크","위축성 흉터 줌패스","쥬베룩물광"]},
+    {name:"내맘대로 3D 모공흉터감소",desc:"4주 맞춤 실속형",components:["3D 모자이크","클라리티 클리어올"]},
+    {name:"베이직 여드름 패키지",desc:"그린필+압출+네오빔+LDM",components:["네오빔"]},
+    {name:"프리미엄 여드름 패키지",desc:"베이직+레드스팟+염증주사",components:["네오빔","더마V 레드스팟토닝"]},
+    {name:"온다 드레인 프로그램",desc:"온다50,000J+T노스6cc",components:["온다"]},
+    {name:"탄력아이 프로젝트",desc:"쥬베룩아이+리쥬란아이",components:["쥬베룩","리쥬란"]},
+    {name:"쥬베룩아이 부스팅데이",desc:"쥬베룩아이+스킨톡신",components:["쥬베룩","더모톡신"]},
+    {name:"쥬베룩물광",desc:"쥬베룩+물광+모공톡신+크라이오",components:["쥬베룩","물광주사","더모톡신"]},
+    {name:"모공탄력 물광 패키지",desc:"스킨톡신+물광+크라이오",components:["더모톡신","물광주사"]},
+    {name:"중안부 원데이 무제한",desc:"국산프리미엄 최대5cc",components:["볼륨 필러"]},
+    {name:"레스틸렌 리프트업 필러",desc:"수입프리미엄 디자인필러",components:["볼륨 필러"]}
+  ]}
+];
+
+// Build package name set for filtering
+var pkgNameSet=new Set();
+packageDefs.forEach(function(cat){cat.items.forEach(function(pkg){pkgNameSet.add(pkg.name)})});
+
+// Needs view state
+var needsMode=false;
+var needsLayoutNodes=[];
+
+// ========== CANVAS + ZOOM STATE ==========
+var cv=document.getElementById('canvas');
+var ctx=cv.getContext('2d');
+var W,H,CX,CY,DPR,nodes=[];
+var highlightedNames=new Set();
+
+// Zoom/pan state
+var zoom={scale:1,tx:0,ty:0,target:{scale:1,tx:0,ty:0},animating:false,focused:null};
+var INIT_SCALE=0.32; // 초기 축소 비율
+
+function initCanvas(){
+  DPR=window.devicePixelRatio||1;
+  // 캔버스 = 뷰포트에 맞춤 (클릭 영역이 뷰포트 밖으로 나가지 않도록)
+  W=innerWidth;
+  H=innerHeight-50;
+  cv.width=W*DPR;cv.height=H*DPR;
+  cv.style.width=W+'px';cv.style.height=H+'px';
+  // 노드 좌표 중심 — 넓은 월드 공간 (축소 줌으로 전체 표시)
+  CX=800;CY=600;
+}
+
+function hex2rgb(h){return[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)]}
+
+function drawCurve(x1,y1,x2,y2,color,w){
+  ctx.beginPath();
+  var cx1=x1+(x2-x1)*.5-(y2-y1)*.1;
+  var cy1=y1+(y2-y1)*.5+(x2-x1)*.1;
+  ctx.moveTo(x1,y1);ctx.quadraticCurveTo(cx1,cy1,x2,y2);
+  ctx.strokeStyle=color;ctx.lineWidth=w;ctx.stroke();
+}
+
+function roundRectPath(c,x,y,w,h,r){
+  c.moveTo(x+r,y);c.lineTo(x+w-r,y);c.quadraticCurveTo(x+w,y,x+w,y+r);
+  c.lineTo(x+w,y+h-r);c.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  c.lineTo(x+r,y+h);c.quadraticCurveTo(x,y+h,x,y+h-r);c.lineTo(x,y+r);c.quadraticCurveTo(x,y,x+r,y);c.closePath();
+}
+function fillRR(c,x,y,w,h,r,fill){c.beginPath();roundRectPath(c,x,y,w,h,r);c.fillStyle=fill;c.fill()}
+
+function wrapTxt(text,maxW){
+  var lines=[],line='';
+  for(var i=0;i<text.length;i++){
+    var test=line+text[i];
+    if(ctx.measureText(test).width>maxW&&line.length>0){lines.push(line);line=text[i]}
+    else line=test;
+  }
+  if(line)lines.push(line);return lines;
+}
+
+// ========== COLLISION RESOLUTION ==========
+// Each layoutNode has: {x, y, hw, hh, type, parentX, parentY, ...data}
+var layoutNodes=[];
+
+function resolveCollisions(nodeList, iterations){
+  var pad=52;
+  for(var iter=0;iter<iterations;iter++){
+    var moved=false;
+    for(var i=0;i<nodeList.length;i++){
+      for(var j=i+1;j<nodeList.length;j++){
+        var a=nodeList[i],b=nodeList[j];
+        var overlapX=(a.hw+b.hw+pad)-(Math.abs(a.x-b.x));
+        var overlapY=(a.hh+b.hh+pad)-(Math.abs(a.y-b.y));
+        if(overlapX>0&&overlapY>0){
+          var dx=b.x-a.x||0.1, dy=b.y-a.y||0.1;
+          var dist=Math.sqrt(dx*dx+dy*dy);
+          // 겹침량에 비례한 방사형 밀어내기
+          var push=Math.sqrt(overlapX*overlapX+overlapY*overlapY)*0.6;
+          var pushX=(dx/dist)*push;
+          var pushY=(dy/dist)*push;
+          var aWeight=a.type==='journey'?0.0:a.type==='sub'?0.2:0.6;
+          var bWeight=b.type==='journey'?0.0:b.type==='sub'?0.2:0.6;
+          a.x-=pushX*aWeight; a.y-=pushY*aWeight;
+          b.x+=pushX*bWeight; b.y+=pushY*bWeight;
+          moved=true;
+        }
+      }
+    }
+    if(!moved)break;
+  }
+}
+
+// Update parentX/parentY after collision resolution
+function updateParentRefs(nodeList){
+  // Build index: find parent for each node by hierarchy
+  for(var i=0;i<nodeList.length;i++){
+    var nd=nodeList[i];
+    if(nd.type==='journey')continue; // root, no parent to update (parent=center)
+    // Find parent node
+    var parent=null;
+    for(var j=0;j<nodeList.length;j++){
+      var p=nodeList[j];
+      if(p===nd)continue;
+      if(nd.type==='sub'&&p.type==='journey'&&p.ji===nd.ji){parent=p;break;}
+      if(nd.type==='sub2'&&p.type==='sub'&&p.ji===nd.ji&&p.si===nd.si){parent=p;break;}
+      if(nd.type==='leaf'&&nd.gi!==undefined&&p.type==='sub2'&&p.ji===nd.ji&&p.si===nd.si&&p.li===nd.gi){parent=p;break;}
+      if(nd.type==='leaf'&&nd.gi===undefined&&p.type==='sub'&&p.ji===nd.ji&&p.si===nd.si){parent=p;break;}
+      if(nd.type==='brand'&&p.type==='sub2'&&p.ji===nd.ji&&p.si===nd.si&&p.li===nd.li){parent=p;break;}
+    }
+    if(parent){nd.parentX=parent.x;nd.parentY=parent.y;}
+  }
+}
+
+// ========== LAYOUT (compute positions) ==========
+function computeLayout(){
+  layoutNodes=[];
+  ctx.save();
+  // We need ctx for measureText, set a base transform
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+
+  var js=tree.j;
+  // journey 노드 배치 각도 — 4분면에 균등 배분
+  var baseAngles=[-Math.PI*0.70, -Math.PI*0.30, Math.PI*0.30, Math.PI*0.70];
+
+  for(var ji=0;ji<js.length;ji++){
+    var j=js[ji],jAngle=baseAngles[ji],jColor=JC[ji];
+    var jR=520;
+    var jx=CX+Math.cos(jAngle)*jR,jy=CY+Math.sin(jAngle)*jR;
+
+    ctx.font='bold 14px "Pretendard Variable",Pretendard,-apple-system,system-ui';
+    var jbw=Math.max(ctx.measureText(j.name).width+32,100),jbh=34;
+    layoutNodes.push({x:jx,y:jy,hw:jbw/2,hh:jbh/2,type:'journey',
+      name:j.name,color:jColor,ji:ji,parentX:CX,parentY:CY,bw:jbw,bh:jbh});
+
+    var subs=j.subs;
+    var subSpread=subs.length<=2?1.00:subs.length<=4?0.90:subs.length<=6?0.82:0.72;
+    // 각 journey의 좌우 경계 각도 계산 (인접 journey 중간점)
+    var prevAngle = ji>0 ? baseAngles[ji-1] : baseAngles[0]-Math.PI;
+    var nextAngle = ji<3 ? baseAngles[ji+1] : baseAngles[3]+Math.PI;
+    var boundaryMin = (jAngle+prevAngle)/2 + 0.10;
+    var boundaryMax = (jAngle+nextAngle)/2 - 0.10;
+    var subStart=jAngle-subSpread*(subs.length-1)/2;
+
+    for(var si=0;si<subs.length;si++){
+      var sub=subs[si];
+      // 서브 각도를 이 journey 영역 안으로 clamp
+      var sAngle=Math.max(boundaryMin, Math.min(boundaryMax, subStart+si*subSpread));
+      var sR=380;
+      var sx=jx+Math.cos(sAngle)*sR,sy=jy+Math.sin(sAngle)*sR;
+
+      ctx.font='600 11px "Pretendard Variable",Pretendard,-apple-system,system-ui';
+      var sw2=Math.max(ctx.measureText(sub.name).width+20,75),sh2=26;
+      layoutNodes.push({x:sx,y:sy,hw:sw2/2,hh:sh2/2,type:'sub',
+        name:sub.name,brandInfo:sub.brandInfo,color:jColor,ji:ji,si:si,parentX:jx,parentY:jy,bw:sw2,bh:sh2});
+
+      var items=sub.items;
+      var leafSpread=items.length<=3?0.64:items.length<=5?0.58:items.length<=8?0.52:0.44;
+      var leafStart=sAngle-leafSpread*(items.length-1)/2;
+
+      for(var li=0;li<items.length;li++){
+        var leaf=items[li];
+        if(pkgNameSet.has(leaf.n))continue;
+        // 리프 각도도 journey 영역 안으로 clamp
+        var lAngle=Math.max(boundaryMin, Math.min(boundaryMax, leafStart+li*leafSpread));
+        var lR=360+(li%3)*55;
+        var lx=sx+Math.cos(lAngle)*lR,ly=sy+Math.sin(lAngle)*lR;
+
+        if(leaf.brands){
+          // sub2 중간노드 (예: 주름톡신, 사각턱보톡스)
+          ctx.font='600 10px "Pretendard Variable",Pretendard,-apple-system,system-ui';
+          var s2bw=Math.max(ctx.measureText(leaf.n).width+22,80),s2bh=26;
+          layoutNodes.push({x:lx,y:ly,hw:s2bw/2,hh:s2bh/2,type:'sub2',
+            name:leaf.n,tip:leaf.tip,cat:leaf.c,lv:leaf.l,v:leaf.v,
+            color:CC[leaf.c]||'#B0A89E',ji:ji,si:si,li:li,
+            parentX:sx,parentY:sy,bw:s2bw,bh:s2bh});
+
+          var brands=leaf.brands;
+          var bSpread=brands.length<=3?0.66:brands.length<=6?0.58:0.50;
+          var bStart=lAngle-bSpread*(brands.length-1)/2;
+          for(var bi=0;bi<brands.length;bi++){
+            var br=brands[bi],bAngle=bStart+bi*bSpread;
+            var bR=270;
+            var bx=lx+Math.cos(bAngle)*bR,by=ly+Math.sin(bAngle)*bR;
+            ctx.font='400 9px "Pretendard Variable",Pretendard,-apple-system,system-ui';
+            var btw=ctx.measureText(br.n).width;
+            var btextLines=Math.ceil(btw/70);
+            var bHW=Math.min(btw,70)/2+4;
+            var bdotR=Math.max(3,br.v/5);
+            var bHH=bdotR+4+btextLines*12;
+            layoutNodes.push({x:bx,y:by+bHH/2-bdotR,hw:bHW,hh:bHH/2+2,type:'brand',
+              name:br.n,tip:br.t,who:br.w,note:br.note,dur:br.dur,cat:br.c,lv:br.l,v:br.v,
+              color:CC[br.c]||'#C05030',ji:ji,si:si,li:li,bi:bi,
+              parentX:lx,parentY:ly,dotR:bdotR,textLines:btextLines});
+          }
+        } else {
+          ctx.font='400 9.5px "Pretendard Variable",Pretendard,-apple-system,system-ui';
+          var tw=ctx.measureText(leaf.n).width;
+          var textLines=Math.ceil(tw/75);
+          var leafHW=Math.min(tw,75)/2+4;
+          var dotR=Math.max(3.5,leaf.v/4.5);
+          var leafHH=dotR+4+textLines*12;
+          layoutNodes.push({x:lx,y:ly+leafHH/2-dotR,hw:leafHW,hh:leafHH/2+2,type:'leaf',
+            name:leaf.n,tip:leaf.t,who:leaf.w,eff:leaf.eff,cat:leaf.c,lv:leaf.l,v:leaf.v,
+            color:CC[leaf.c]||'#8A7E72',ji:ji,si:si,li:li,
+            parentX:sx,parentY:sy,dotR:dotR,textLines:textLines});
+        }
+      }
+    }
+  }
+  ctx.restore();
+
+  // Run collision resolution — 30 iterations usually enough
+  resolveCollisions(layoutNodes, 600);
+  updateParentRefs(layoutNodes);
+}
+
+// ========== DRAW (render from layoutNodes) ==========
+function draw(){
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  // Clear with appropriate background — 캔버스 CSS 크기 기준
+  var clearW=cv.width/DPR, clearH=cv.height/DPR;
+  if(lightTheme){ctx.fillStyle='#F9F6F0';ctx.fillRect(0,0,clearW,clearH)}
+  else{ctx.clearRect(0,0,clearW,clearH)}
+  ctx.setTransform(DPR*zoom.scale,0,0,DPR*zoom.scale,DPR*zoom.tx,DPR*zoom.ty);
+  nodes=[];
+  var activeNodes=needsMode?needsLayoutNodes:layoutNodes;
+
+  // Subtle radial grid
+  ctx.globalAlpha=.04;
+  [150,300,450,600].forEach(function(r){ctx.beginPath();ctx.arc(CX,CY,r,0,Math.PI*2);ctx.strokeStyle='#F0EBE3';ctx.lineWidth=1/zoom.scale;ctx.stroke()});
+  ctx.globalAlpha=1;
+
+  // Render from layoutNodes
+  // Pass 1: curves (behind everything)
+  var pkgFilter0=activePkg&&highlightedNames.size>0;
+  for(var i=0;i<activeNodes.length;i++){
+    var nd=activeNodes[i],rgb=hex2rgb(nd.color);
+    if(pkgFilter0&&(nd.type==='leaf'||nd.type==='brand')&&!highlightedNames.has(nd.name)){ctx.globalAlpha=0.03}else{ctx.globalAlpha=1}
+    if(nd.type==='journey'){
+      drawCurve(nd.parentX,nd.parentY,nd.x,nd.y,'rgba('+rgb+',0.45)',3.5/zoom.scale);
+    }else if(nd.type==='sub'){
+      drawCurve(nd.parentX,nd.parentY,nd.x,nd.y,'rgba('+rgb+',0.28)',2.2/zoom.scale);
+    }else if(nd.type==='sub2'){
+      var lrgb2=hex2rgb(nd.color);
+      drawCurve(nd.parentX,nd.parentY,nd.x,nd.y,'rgba('+lrgb2+',0.35)',1.5/zoom.scale);
+    }else if(nd.type==='brand'){
+      var brgb=hex2rgb(nd.color);
+      drawCurve(nd.parentX,nd.parentY,nd.x,nd.y-((nd.hh||12)-nd.dotR),'rgba('+brgb+',0.18)',0.8/zoom.scale);
+    }else if(nd.type==='leaf'){
+      var lrgb=hex2rgb(nd.color);
+      drawCurve(nd.parentX,nd.parentY,nd.x,nd.y-((nd.hh||15)-nd.dotR),'rgba('+lrgb+',0.22)',1/zoom.scale);
+    }
+  }
+
+  // Pass 2: nodes
+  var pkgFilterActive=activePkg&&highlightedNames.size>0;
+  for(var i=0;i<activeNodes.length;i++){
+    var nd=activeNodes[i],rgb=hex2rgb(nd.color);
+    // Dim non-highlighted leaf/brand nodes when package filter is active
+    if(pkgFilterActive&&(nd.type==='leaf'||nd.type==='brand')&&!highlightedNames.has(nd.name)){
+      ctx.globalAlpha=0.08;
+    }else{ctx.globalAlpha=1;}
+
+    if(nd.type==='journey'){
+      ctx.font='bold '+Math.max(10,14/Math.sqrt(zoom.scale))+'px "Pretendard Variable",Pretendard,-apple-system,system-ui';
+      fillRR(ctx,nd.x-nd.bw/2,nd.y-nd.bh/2,nd.bw,nd.bh,17,nd.color);
+      ctx.fillStyle='#F0EBE3';ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText(nd.name,nd.x,nd.y);
+      nodes.push({x:nd.x,y:nd.y,r:nd.bw/2,name:nd.name,isJ:true,color:nd.color,ji:nd.ji});
+
+    }else if(nd.type==='sub'){
+      ctx.font='600 '+Math.max(9,11/Math.sqrt(zoom.scale))+'px "Pretendard Variable",Pretendard,-apple-system,system-ui';
+      fillRR(ctx,nd.x-nd.bw/2,nd.y-nd.bh/2,nd.bw,nd.bh,13,'rgba('+rgb+',0.18)');
+      ctx.beginPath();roundRectPath(ctx,nd.x-nd.bw/2,nd.y-nd.bh/2,nd.bw,nd.bh,13);
+      ctx.strokeStyle='rgba('+rgb+',0.45)';ctx.lineWidth=1/zoom.scale;ctx.stroke();
+      ctx.fillStyle=nd.color;ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText(nd.name,nd.x,nd.y);
+      nodes.push({x:nd.x,y:nd.y,r:nd.bw/2,name:nd.name,brandInfo:nd.brandInfo,isSub:true,color:nd.color,ji:nd.ji,si:nd.si});
+
+    }else if(nd.type==='sub2'){
+      // 중간 그룹 노드 (주름톡신, 사각턱보톡스)
+      var s2c=nd.color,s2rgb=hex2rgb(s2c);
+      ctx.font='600 '+Math.max(8,10/Math.sqrt(zoom.scale))+'px "Pretendard Variable",Pretendard,-apple-system,system-ui';
+      fillRR(ctx,nd.x-nd.bw/2,nd.y-nd.bh/2,nd.bw,nd.bh,10,'rgba('+s2rgb+',0.22)');
+      ctx.beginPath();roundRectPath(ctx,nd.x-nd.bw/2,nd.y-nd.bh/2,nd.bw,nd.bh,10);
+      ctx.strokeStyle='rgba('+s2rgb+',0.6)';ctx.lineWidth=1/zoom.scale;ctx.stroke();
+      ctx.fillStyle=s2c;ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText(nd.name,nd.x,nd.y);
+      nodes.push({x:nd.x,y:nd.y,r:nd.bw/2,name:nd.name,tip:nd.tip,isSub2:true,color:nd.color,
+        cat:nd.cat,lv:nd.lv,ji:nd.ji,si:nd.si,li:nd.li});
+
+    }else if(nd.type==='brand'){
+      // 브랜드 리프 노드
+      var bc=nd.color,brgb2=hex2rgb(bc);
+      var bdotR=nd.dotR;
+      var bdotY=nd.y-(nd.hh||12)+bdotR;
+      var bx2=nd.x;
+      // 랭크 뱃지 색
+      var rankColors=['#D4A030','#8A7E72','#A0623A','#C08B5C','#C08B5C'];
+      var rankIdx={'1순위':0,'2순위':1,'3순위':2,'4순위':3,'5순위':4,'국산':2,'국산프리미엄':1,'수입':0,'수입프리미엄':0};
+      var rc=rankColors[rankIdx[nd.lv]||4];
+      // 작은 점
+      ctx.beginPath();ctx.arc(bx2,bdotY,bdotR,0,Math.PI*2);ctx.fillStyle=bc;ctx.fill();
+      ctx.beginPath();ctx.arc(bx2,bdotY,bdotR+2,0,Math.PI*2);ctx.fillStyle='rgba('+brgb2+',0.1)';ctx.fill();
+      // 검색 하이라이트
+      if(highlightedNames.has(nd.name)){ctx.beginPath();ctx.arc(bx2,bdotY,bdotR+8,0,Math.PI*2);ctx.fillStyle='rgba(255,220,80,0.35)';ctx.fill();ctx.strokeStyle='rgba(255,220,80,0.9)';ctx.lineWidth=2.5;ctx.stroke();}
+      // 순위 뱃지 (작은 원형)
+      ctx.beginPath();ctx.arc(bx2+bdotR,bdotY-bdotR,4.5/zoom.scale*Math.min(zoom.scale,2),0,Math.PI*2);
+      ctx.fillStyle=rc;ctx.fill();
+      // 이름 텍스트
+      ctx.font='400 '+Math.max(7,9/Math.sqrt(zoom.scale))+'px "Pretendard Variable",Pretendard,-apple-system,system-ui';
+      ctx.fillStyle=lightTheme?'#6A6560':'#B0A89E';ctx.textAlign='center';ctx.textBaseline='top';
+      var blines=wrapTxt(nd.name,70);
+      for(var k=0;k<blines.length;k++)ctx.fillText(blines[k],bx2,bdotY+bdotR+2+k*11);
+      nodes.push({x:bx2,y:bdotY,r:35,name:nd.name,tip:nd.tip,who:nd.who,
+        note:nd.note,dur:nd.dur,cat:nd.cat,lv:nd.lv,
+        color:bc,isBrand:true,hh:bdotR+4+blines.length*11,ji:nd.ji,si:nd.si,bi:nd.bi});
+
+    }else if(nd.type==='leaf'){
+      var lc=nd.color,lrgb=hex2rgb(lc);
+      var dotR=nd.dotR;
+      // Leaf center is offset: nd.y is center of bounding box, dot is at top
+      var dotY=nd.y-(nd.hh||15)+dotR;
+      var lx=nd.x;
+
+      ctx.beginPath();ctx.arc(lx,dotY,dotR,0,Math.PI*2);ctx.fillStyle=lc;ctx.fill();
+      ctx.beginPath();ctx.arc(lx,dotY,dotR+3,0,Math.PI*2);ctx.fillStyle='rgba('+lrgb+',0.12)';ctx.fill();
+      // 검색 하이라이트
+      if(highlightedNames.has(nd.name)){ctx.beginPath();ctx.arc(lx,dotY,dotR+8,0,Math.PI*2);ctx.fillStyle='rgba(255,220,80,0.35)';ctx.fill();ctx.strokeStyle='rgba(255,220,80,0.9)';ctx.lineWidth=2.5;ctx.stroke();}
+
+      ctx.font='400 '+Math.max(8,9.5/Math.sqrt(zoom.scale))+'px "Pretendard Variable",Pretendard,-apple-system,system-ui';
+      ctx.fillStyle=lightTheme?'#6A6560':'#8A7E72';ctx.textAlign='center';ctx.textBaseline='top';
+      var lines=wrapTxt(nd.displayName||nd.name,75);
+      for(var k=0;k<lines.length;k++)ctx.fillText(lines[k],lx,dotY+dotR+3+k*12);
+
+      nodes.push({x:lx,y:dotY,r:40,name:nd.name,tip:nd.tip,who:nd.who,eff:nd.eff,cat:nd.cat,lv:nd.lv,
+        color:lc,isL:true,isNeedsLeaf:!!nd.isNeedsLeaf,hh:dotR+4+lines.length*12,ji:nd.ji,si:nd.si});
+    }
+  }
+  ctx.globalAlpha=1;
+
+  // Center node
+  var grad=ctx.createRadialGradient(CX,CY,8,CX,CY,48);
+  grad.addColorStop(0,'#C08B5C');grad.addColorStop(1,'#A0623A');
+  ctx.shadowColor='rgba(192,139,92,.35)';ctx.shadowBlur=25/zoom.scale;
+  ctx.beginPath();ctx.arc(CX,CY,46,0,Math.PI*2);ctx.fillStyle=grad;ctx.fill();
+  ctx.shadowBlur=0;
+  ctx.font='bold '+Math.max(11,15/Math.sqrt(zoom.scale))+'px "Pretendard Variable",Pretendard,-apple-system,system-ui';
+  ctx.fillStyle='#F0EBE3';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('톤즈',CX,CY-9);
+  ctx.font='bold '+Math.max(8,11/Math.sqrt(zoom.scale))+'px "Pretendard Variable",Pretendard,-apple-system,system-ui';
+  ctx.fillText(needsMode?'고민별 상담':'가이드',CX,CY+9);
+  nodes.push({x:CX,y:CY,r:46,name:'톤즈 가이드',isCenter:true});
+}
+
+// ========== ZOOM ANIMATION ==========
+function animateZoom(){
+  var speed=0.12;
+  var ds=zoom.target.scale-zoom.scale;
+  var dtx=zoom.target.tx-zoom.tx;
+  var dty=zoom.target.ty-zoom.ty;
+
+  zoom.scale+=ds*speed;
+  zoom.tx+=dtx*speed;
+  zoom.ty+=dty*speed;
+
+  if(Math.abs(ds)<0.005&&Math.abs(dtx)<0.5&&Math.abs(dty)<0.5){
+    zoom.scale=zoom.target.scale;
+    zoom.tx=zoom.target.tx;
+    zoom.ty=zoom.target.ty;
+    zoom.animating=false;
+    draw();
+    return;
+  }
+  draw();
+  requestAnimationFrame(animateZoom);
+}
+
+function zoomTo(cx,cy,scale){
+  zoom.target.scale=scale;
+  zoom.target.tx=W/2-cx*scale;
+  zoom.target.ty=H/2-cy*scale;
+  if(!zoom.animating){zoom.animating=true;animateZoom()}
+  backBtn.className=scale>1.05?'back-btn show':'back-btn';
+  zoomHint.classList.add('hide');
+}
+
+function getInitZoom(s){
+  // 월드 중심(CX,CY)이 뷰포트 중심에 오도록 tx/ty 계산
+  return{scale:s, tx:W/2-CX*s, ty:H/2-CY*s};
+}
+function zoomOut(){
+  var iz;
+  if(needsMode){
+    iz=getInitZoom(0.22);
+  }else{
+    iz=getInitZoom(INIT_SCALE);
+  }
+  zoom.target.scale=iz.scale;
+  zoom.target.tx=iz.tx;
+  zoom.target.ty=iz.ty;
+  zoom.focused=null;
+  if(!zoom.animating){zoom.animating=true;animateZoom()}
+  backBtn.className='back-btn';
+  document.querySelectorAll('#navPanel button').forEach(function(b){b.classList.remove('active')});
+  zoomHint.classList.remove('hide');
+}
+
+// ========== SCREEN → WORLD COORDS ==========
+function screen2world(sx,sy){
+  return{x:(sx-zoom.tx)/zoom.scale, y:(sy-zoom.ty)/zoom.scale};
+}
+
+// ========== DRAG/PAN + NODE DRAG STATE ==========
+var drag={active:false,startX:0,startY:0,startTx:0,startTy:0,moved:false,
+  nodeDrag:false,dragNode:null,dragChildren:[],dragStartWx:0,dragStartWy:0};
+
+function findDescendants(node,arr){
+  var ch=[];
+  for(var i=0;i<arr.length;i++){
+    var nd=arr[i];
+    if(nd===node)continue;
+    var isChild=false;
+    if(node.type==='journey'){
+      isChild=nd.ji===node.ji&&nd.type!=='journey';
+    }else if(node.type==='sub'){
+      isChild=nd.ji===node.ji&&nd.si===node.si&&(nd.type==='sub2'||nd.type==='leaf'||nd.type==='brand');
+    }else if(node.type==='sub2'){
+      if(nd.type==='brand'&&nd.ji===node.ji&&nd.si===node.si&&nd.li===node.li){
+        isChild=true;
+      }else if(nd.type==='leaf'&&nd.ji===node.ji&&nd.si===node.si&&nd.gi===node.li){
+        isChild=true;
+      }
+    }
+    if(isChild)ch.push(nd);
+  }
+  return ch;
+}
+function hitTestLayout(mx,my){
+  var a=needsMode?needsLayoutNodes:layoutNodes;
+  for(var i=a.length-1;i>=0;i--){
+    var nd=a[i];
+    if(nd.type==='journey'||nd.type==='sub'||nd.type==='sub2'){
+      var bw=nd.bw||80,bh=nd.bh||30;
+      if(mx>nd.x-bw/2-5&&mx<nd.x+bw/2+5&&my>nd.y-bh/2-5&&my<nd.y+bh/2+5)return nd;
+    }
+  }
+  return null;
+}
+
+// ========== HIT TEST HELPER ==========
+function hitTest(mx,my){
+  for(var i=nodes.length-1;i>=0;i--){
+    var nd=nodes[i];
+    if(nd.isCenter){
+      var d=Math.sqrt((mx-nd.x)*(mx-nd.x)+(my-nd.y)*(my-nd.y));
+      if(d<nd.r)return nd;
+    }
+    if(nd.isJ){
+      var d=Math.sqrt((mx-nd.x)*(mx-nd.x)+(my-nd.y)*(my-nd.y));
+      if(d<nd.r+5)return nd;
+    }
+    if(nd.isSub||nd.isSub2){
+      var d=Math.sqrt((mx-nd.x)*(mx-nd.x)+(my-nd.y)*(my-nd.y));
+      if(d<nd.r+5)return nd;
+    }
+    if(nd.isL||nd.isBrand){
+      var dx=mx-nd.x,dy=my-nd.y;
+      if(Math.abs(dx)<nd.r&&dy>-10&&dy<(nd.hh||30))return nd;
+    }
+  }
+  return null;
+}
+
+// ========== MOUSE EVENTS ==========
+cv.addEventListener('mousemove',function(e){
+  var rect=cv.getBoundingClientRect();
+  var sx=e.clientX-rect.left,sy=e.clientY-rect.top;
+
+  // Handle node drag or background pan
+  if(drag.active){
+    var dx=sx-drag.startX,dy=sy-drag.startY;
+    if(Math.abs(dx)>3||Math.abs(dy)>3)drag.moved=true;
+
+    if(drag.nodeDrag&&drag.dragNode){
+      // Node drag: move node + children in world coords
+      var wNow=screen2world(sx,sy);
+      var wdx=wNow.x-drag.dragStartWx;
+      var wdy=wNow.y-drag.dragStartWy;
+      // Move the dragged node + all children by delta
+      drag.dragNode.x+=wdx; drag.dragNode.y+=wdy;
+      for(var ci=0;ci<drag.dragChildren.length;ci++){
+        drag.dragChildren[ci].x+=wdx;
+        drag.dragChildren[ci].y+=wdy;
+      }
+      // Update all parent references to fix connection lines
+      var activeArr=needsMode?needsLayoutNodes:layoutNodes;
+      updateParentRefs(activeArr);
+      drag.dragStartWx=wNow.x; drag.dragStartWy=wNow.y;
+      draw();
+      hideT();
+      cv.style.cursor='move';
+    }else{
+      // Background pan
+      zoom.tx=drag.startTx+dx;
+      zoom.ty=drag.startTy+dy;
+      zoom.target.tx=zoom.tx;
+      zoom.target.ty=zoom.ty;
+      draw();
+      hideT();
+      cv.style.cursor='grabbing';
+    }
+    return;
+  }
+
+  var w=screen2world(sx,sy);
+  var mx=w.x,my=w.y,found=false;
+
+  for(var i=nodes.length-1;i>=0;i--){
+    var nd=nodes[i];
+    if(nd.isL||nd.isBrand){
+      var dx=mx-nd.x,dy=my-nd.y;
+      if(Math.abs(dx)<nd.r&&dy>-10&&dy<(nd.hh||30)){
+        var lc=nd.color||'#fff';
+        var h='<b>'+nd.name+'</b>';
+        if(nd.cat)h+='<span class="t" style="background:'+lc+'30;color:'+lc+'">'+nd.cat+'</span>';
+        if(nd.lv)h+='<span class="t" style="background:rgba(255,255,255,.08);color:#8A7E72">'+nd.lv+'</span>';
+        if(nd.tip)h+='<div style="margin-top:4px;font-size:12px;color:#b0a89e">'+nd.tip+'</div>';
+        if(nd.dur)h+='<div style="margin-top:5px;padding:5px 9px;background:rgba(160,98,58,0.12);border-left:3px solid #A0623A;border-radius:0 5px 5px 0;font-size:11.5px;color:#D4B896"><span style="font-size:10px;font-weight:700;color:#A0623A;display:block;margin-bottom:1px">효과·지속기간</span>'+nd.dur+'</div>';
+        if(nd.note)h+='<div style="margin-top:5px;padding:5px 9px;background:rgba(192,80,48,0.1);border-left:3px solid #C05030;border-radius:0 5px 5px 0;font-size:11.5px;color:#E8C4A8"><span style="font-size:10px;font-weight:700;color:#C05030;display:block;margin-bottom:1px">[주의] 주의사항</span>'+nd.note+'</div>';
+        if(nd.eff)h+='<div style="margin-top:5px;padding:5px 9px;background:rgba(192,139,92,0.1);border-left:3px solid #C08B5C;border-radius:0 5px 5px 0;font-size:11.5px;color:#D4B896">'+nd.eff+'</div>';
+        if(nd.who)h+='<div class="who-box"><span class="who-label">이런 분께 추천</span>'+nd.who+'</div>';
+        showT(e,h);found=true;break;
+      }
+    }
+    if(nd.isJ||nd.isSub||nd.isSub2){
+      var dx2=mx-nd.x,dy2=my-nd.y;
+      if(dx2*dx2+dy2*dy2<nd.r*nd.r){
+        if(nd.isSub&&nd.brandInfo){
+          var sc=nd.color||'#fff';
+          var bh='<b>'+nd.name+'</b>';
+          var lines=nd.brandInfo.split('\n');
+          bh+='<div style="margin-top:6px">';
+          for(var bi2=0;bi2<lines.length;bi2++){
+            if(bi2===0){bh+='<div style="font-size:11px;font-weight:700;color:'+sc+';margin-bottom:4px">'+lines[bi2]+'</div>';}
+            else{bh+='<div style="font-size:11px;color:#B0A89E;padding:2px 0;border-bottom:1px solid rgba(255,255,255,.06)">'+lines[bi2]+'</div>';}
+          }
+          bh+='</div>';
+          showT(e,bh);found=true;break;
+        }
+        if(nd.isSub2&&nd.tip){
+          var sc2=nd.color||'#fff';
+          var bh2='<b style="color:'+sc2+'">'+nd.name+'</b>';
+          bh2+='<div style="margin-top:6px;font-size:11px;color:#B0A89E">'+nd.tip+'</div>';
+          showT(e,bh2);found=true;break;
+        }
+        found=true;break;
+      }
+    }
+  }
+  if(!found)hideT();
+  cv.style.cursor=found?'pointer':'grab';
+});
+cv.addEventListener('mouseleave',function(){hideT();if(drag.active){drag.active=false}});
+
+// ========== MOUSEDOWN — start drag ==========
+cv.addEventListener('mousedown',function(e){
+  if(e.button!==0)return;
+  var rect=cv.getBoundingClientRect();
+  drag.startX=e.clientX-rect.left;
+  drag.startY=e.clientY-rect.top;
+  drag.startTx=zoom.tx;
+  drag.startTy=zoom.ty;
+  drag.moved=false;
+
+  // Check if clicking on a group node (journey/sub/sub2) for node dragging
+  var w=screen2world(drag.startX,drag.startY);
+  var hitNode=hitTestLayout(w.x,w.y);
+  if(hitNode){
+    drag.nodeDrag=true;
+    drag.dragNode=hitNode;
+    drag.dragStartWx=w.x;
+    drag.dragStartWy=w.y;
+    var activeArr=needsMode?needsLayoutNodes:layoutNodes;
+    drag.dragChildren=findDescendants(hitNode,activeArr);
+    drag.active=true;
+    cv.style.cursor='move';
+  }else{
+    drag.nodeDrag=false;
+    drag.dragNode=null;
+    drag.dragChildren=[];
+    drag.active=true;
+  }
+});
+
+// ========== MOUSEUP — end drag or click ==========
+cv.addEventListener('mouseup',function(e){
+  var wasDrag=drag.moved;
+  var wasNodeDrag=drag.nodeDrag;
+  drag.active=false;
+  drag.moved=false;
+  drag.nodeDrag=false;
+  drag.dragNode=null;
+  drag.dragChildren=[];
+
+  // If user dragged (node or background), don't fire click logic
+  if(wasDrag){
+    cv.style.cursor='grab';
+    if(!wasNodeDrag){
+      var iz=getInitZoom(INIT_SCALE);
+      if(zoom.scale>(INIT_SCALE+0.05)||Math.abs(zoom.tx-iz.tx)>20||Math.abs(zoom.ty-iz.ty)>20){
+        backBtn.className='back-btn show';
+        zoomHint.classList.add('hide');
+      }
+    }
+    return;
+  }
+
+  // Click logic (no drag happened)
+  var rect=cv.getBoundingClientRect();
+  var w=screen2world(e.clientX-rect.left,e.clientY-rect.top);
+  var mx=w.x,my=w.y;
+  var nd=hitTest(mx,my);
+
+  if(!nd)return; // clicked empty space without dragging — do nothing
+
+  if(nd.isCenter){zoomOut();return;}
+  if(nd.isJ){
+    if(zoom.focused==='j'+nd.ji){zoomOut();}
+    else{zoom.focused='j'+nd.ji;zoomTo(nd.x,nd.y,2.2);}
+    return;
+  }
+  if(nd.isSub){
+    if(zoom.focused==='s'+nd.ji+'_'+nd.si){zoomOut();}
+    else{zoom.focused='s'+nd.ji+'_'+nd.si;zoomTo(nd.x,nd.y,3.5);}
+    return;
+  }
+  if(nd.isSub2){
+    if(zoom.focused==='s2'+nd.name){zoomOut();}
+    else{zoom.focused='s2'+nd.name;zoomTo(nd.x,nd.y,5.0);}
+    return;
+  }
+  if(nd.isL||nd.isBrand){
+    if(needsMode && nd.isNeedsLeaf){
+      // Jump to procedure view and focus on this node
+      needsMode=false;
+      var dot=document.getElementById('toggleDot');
+      var track=document.getElementById('toggleTrack');
+      var lbl=document.getElementById('viewLabel');
+      var lblR=document.getElementById('viewLabelR');
+      var origLegend=document.querySelector('#p0 .legend:not(#needsLegend)');
+      var needsLeg=document.getElementById('needsLegend');
+      dot.style.left='2px'; track.style.background='#4A4540';
+      lbl.style.color='#C08B5C'; lbl.style.fontWeight='700';
+      lblR.style.color='#8A7E72'; lblR.style.fontWeight='400';
+      origLegend.style.display='flex'; needsLeg.style.display='none';
+      // Find matching node in procedure view
+      draw();
+      setTimeout(function(){
+        var foundNode=null;
+        var searchName=nd.name;
+        for(var k=0;k<nodes.length;k++){
+          if(nodes[k].name===searchName && (nodes[k].isL||nodes[k].isBrand)){foundNode=nodes[k];break;}
+        }
+        if(foundNode){
+          zoomTo(foundNode.x, foundNode.y, 5.5);
+          highlightedNames.add(foundNode.name);
+          draw();
+          setTimeout(function(){highlightedNames.delete(foundNode.name);draw()},2500);
+        }
+      },100);
+      return;
+    }
+    if(zoom.focused==='l'+nd.name){showNodeCard(nd);return;}
+    else{zoom.focused='l'+nd.name;zoomTo(nd.x,nd.y,5.5);}
+    return;
+  }
+});
+
+// Right-click to zoom out
+cv.addEventListener('contextmenu',function(e){
+  e.preventDefault();
+  if(zoom.scale>(INIT_SCALE+0.05))zoomOut();
+});
+
+// Keyboard: Escape to zoom out
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'){
+    if(document.getElementById('photoPopup').classList.contains('show')){closePhotoPopup();return}
+    if(document.getElementById('nodeOverlay').classList.contains('show')){closeNodeCard();return}
+    if(zoom.scale>(INIT_SCALE+0.05))zoomOut();
+  }
+});
+
+// Mouse wheel zoom
+cv.addEventListener('wheel',function(e){
+  e.preventDefault();
+  var rect=cv.getBoundingClientRect();
+  var mx=e.clientX-rect.left;
+  var my=e.clientY-rect.top;
+  var w=screen2world(mx,my);
+
+  var factor=e.deltaY<0?1.07:1/1.07;
+  var ns=Math.max(0.15,Math.min(6,zoom.target.scale*factor));
+
+  zoom.target.scale=ns;
+  zoom.target.tx=mx-w.x*ns;
+  zoom.target.ty=my-w.y*ns;
+
+  var aboveInit=ns>(INIT_SCALE+0.05);
+  if(aboveInit){backBtn.className='back-btn show';zoomHint.classList.add('hide')}
+  else{backBtn.className='back-btn';zoomHint.classList.remove('hide')}
+
+  zoom.focused=aboveInit?'wheel':null;
+  if(!zoom.animating){zoom.animating=true;animateZoom()}
+},{passive:false});
+
+// ========== NEEDS VIEW TOGGLE ==========
+function toggleNeedsMode(){
+  needsMode=!needsMode;
+  if(needsMode){hidePkgPanel()}else{showPkgPanel()}
+  var dot=document.getElementById('toggleDot');
+  var track=document.getElementById('toggleTrack');
+  var lbl=document.getElementById('viewLabel');
+  var lblR=document.getElementById('viewLabelR');
+  var origLegend=document.querySelector('#p0 .legend:not(#needsLegend)');
+  var needsLeg=document.getElementById('needsLegend');
+  if(needsMode){
+    dot.style.left='22px'; track.style.background='#C08B5C';
+    lbl.style.color='#8A7E72'; lbl.style.fontWeight='400';
+    lblR.style.color='#C08B5C'; lblR.style.fontWeight='700';
+    origLegend.style.display='none'; needsLeg.style.display='flex';
+  }else{
+    dot.style.left='2px'; track.style.background='#4A4540';
+    lbl.style.color='#C08B5C'; lbl.style.fontWeight='700';
+    lblR.style.color='#8A7E72'; lblR.style.fontWeight='400';
+    origLegend.style.display='flex'; needsLeg.style.display='none';
+  }
+  if(needsMode){
+    computeNeedsLayout();
+    zoomOutNeeds();
+  }else{
+    zoomOut();
+  }
+  draw();
+  buildNavPanel();
+}
+
+// ========== NEEDS LAYOUT ==========
+function computeNeedsLayout(){
+  needsLayoutNodes=[];
+  ctx.save();
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+
+  var ns=needsTree.n;
+  var N=ns.length; // 6 categories
+  var sectorAngle=2*Math.PI/N; // 60° per category
+  var startOffset=-Math.PI/2; // start from top
+
+  // Build a lookup: item name → node data from tree.j
+  var itemLookup={};
+  tree.j.forEach(function(j){j.subs.forEach(function(s){s.items.forEach(function(it){
+    itemLookup[it.n]=it;
+    if(it.brands) it.brands.forEach(function(b){ itemLookup[b.n]=b; });
+  })})});
+
+  for(var ni=0;ni<N;ni++){
+    var need=ns[ni], nColor=need.color;
+    // Center angle of this category's sector
+    var nAngle=startOffset + ni*sectorAngle;
+    // Sector boundaries
+    var sectorMin=nAngle - sectorAngle/2 + 0.06;
+    var sectorMax=nAngle + sectorAngle/2 - 0.06;
+
+    // Ring 1: Need category node
+    var nR=560;
+    var nx=CX+Math.cos(nAngle)*nR, ny=CY+Math.sin(nAngle)*nR;
+
+    ctx.font='bold 13px "Pretendard Variable",Pretendard,-apple-system,system-ui';
+    var nbw=Math.max(ctx.measureText(need.name).width+28,100), nbh=32;
+    needsLayoutNodes.push({x:nx,y:ny,hw:nbw/2,hh:nbh/2,type:'journey',
+      name:need.name,color:nColor,ji:ni,parentX:CX,parentY:CY,bw:nbw,bh:nbh});
+
+    // Ring 2: Sub-concerns — distribute evenly within sector
+    var subs=need.subs;
+    var subPadding=0.04;
+    var subAvailable=sectorMax-sectorMin-subPadding*2;
+    var subStep=subs.length>1?subAvailable/(subs.length-1):0;
+    var subStartAngle=subs.length>1?(sectorMin+subPadding):(nAngle);
+
+    for(var si=0;si<subs.length;si++){
+      var sub=subs[si];
+      var sAngle=subStartAngle+si*subStep;
+      var sR=420;
+      var sx=nx+Math.cos(sAngle)*sR, sy=ny+Math.sin(sAngle)*sR;
+
+      ctx.font='600 10.5px "Pretendard Variable",Pretendard,-apple-system,system-ui';
+      var sw2=Math.max(ctx.measureText(sub.name).width+18,70), sh2=24;
+      needsLayoutNodes.push({x:sx,y:sy,hw:sw2/2,hh:sh2/2,type:'sub',
+        name:sub.name,color:nColor,ji:ni,si:si,parentX:nx,parentY:ny,bw:sw2,bh:sh2});
+
+      // Ring 3: Tiers — distribute within sub's angular neighborhood
+      var tiers=sub.tiers||[];
+      var activeTiers=tiers.filter(function(t){return t.rank>0});
+      var gSectorHalf=subStep>0?subStep/2*0.85:sectorAngle/3;
+      var gMin=sAngle-gSectorHalf;
+      var gMax=sAngle+gSectorHalf;
+      var gAvail=gMax-gMin;
+      var gStep=activeTiers.length>1?gAvail/(activeTiers.length-1):0;
+      var gStartAngle=activeTiers.length>1?gMin:sAngle;
+      var globalLi=0;
+
+      for(var gi=0;gi<activeTiers.length;gi++){
+        var tier=activeTiers[gi];
+        var gAngle=gStartAngle+gi*gStep;
+        var gR=320;
+        var gx=sx+Math.cos(gAngle)*gR, gy=sy+Math.sin(gAngle)*gR;
+
+        // Tier node (sub2 type)
+        ctx.font='600 9.5px "Pretendard Variable",Pretendard,-apple-system,system-ui';
+        var gbw=Math.max(ctx.measureText(tier.name).width+16,65), gbh=22;
+        needsLayoutNodes.push({x:gx,y:gy,hw:gbw/2,hh:gbh/2,type:'sub2',
+          name:tier.name,color:nColor,ji:ni,si:si,li:gi,
+          parentX:sx,parentY:sy,bw:gbw,bh:gbh,tip:tier.name+' ('+tier.tag+')'});
+
+        // Ring 4: Programs — fan out from tier node
+        var gItems=tier.programs;
+        var iSectorHalf=gStep>0?gStep/2*0.8:gSectorHalf/2;
+        var iMin=gAngle-iSectorHalf;
+        var iMax=gAngle+iSectorHalf;
+        var iStep=gItems.length>1?(iMax-iMin)/(gItems.length-1):0;
+        var iStartAngle=gItems.length>1?iMin:gAngle;
+
+        for(var li=0;li<gItems.length;li++){
+          var itemName=gItems[li];
+          var ref=itemLookup[itemName]||{};
+          var lAngle=iStartAngle+li*iStep;
+          var lR=210+(li%2)*35;
+          var lx=gx+Math.cos(lAngle)*lR, ly=gy+Math.sin(lAngle)*lR;
+
+          ctx.font='400 9px "Pretendard Variable",Pretendard,-apple-system,system-ui';
+          var displayName=itemName.replace(/\n/g,' ');
+          var tw=ctx.measureText(displayName).width;
+          var textLines=Math.ceil(tw/72);
+          var leafHW=Math.min(tw,72)/2+4;
+          var dotR=Math.max(3,6);
+          var leafHH=dotR+4+textLines*11;
+          var leafColor=nColor;
+          var lv=ref.l||'';
+
+          needsLayoutNodes.push({x:lx,y:ly+leafHH/2-dotR,hw:leafHW,hh:leafHH/2+2,type:'leaf',
+            name:itemName,displayName:displayName,tip:ref.t||'',who:ref.w||'',eff:ref.eff||'',
+            note:ref.note||'',dur:ref.dur||'',
+            cat:ref.c||'',lv:lv,v:ref.v||5,
+            color:leafColor,ji:ni,si:si,gi:gi,li:globalLi,
+            parentX:gx,parentY:gy,dotR:dotR,textLines:textLines,
+            isNeedsLeaf:true});
+          globalLi++;
+        }
+      }
+    }
+  }
+  ctx.restore();
+  resolveCollisions(needsLayoutNodes, 500);
+}
+
+function zoomOutNeeds(){
+  var iz=getInitZoom(0.22);
+  zoom.target.scale=iz.scale;
+  zoom.target.tx=iz.tx;
+  zoom.target.ty=iz.ty;
+  zoom.focused=null;
+  if(!zoom.animating){zoom.animating=true;animateZoom()}
+  backBtn.className='back-btn';
+}
+
+// ========== THEME TOGGLE ==========
+var lightTheme=true;
+function toggleTheme(){
+  lightTheme=!lightTheme;
+  document.body.classList.toggle('theme-light',lightTheme);
+  document.getElementById('themeBtn').textContent=lightTheme?'어두운 테마':'밝은 테마';
+  draw();
+}
+
+// ========== NAV PANEL ==========
+function buildNavPanel(){
+  var panel=document.getElementById('navPanel');
+  if(!panel)return;
+  panel.innerHTML='';
+  if(needsMode){
+    needsTree.n.forEach(function(need,i){
+      var btn=document.createElement('button');
+      btn.textContent=need.name;
+      btn.style.borderLeftColor=need.color;
+      btn.style.borderLeftWidth='3px';
+      btn.onclick=function(){
+        // Find the journey node for this need
+        var found=null;
+        for(var k=0;k<nodes.length;k++){
+          if(nodes[k].isJ && nodes[k].name===need.name){found=nodes[k];break;}
+        }
+        if(found){
+          zoomTo(found.x, found.y, 2.2);
+          zoom.focused='j'+i;
+        }
+        // Update active state
+        panel.querySelectorAll('button').forEach(function(b){b.classList.remove('active')});
+        btn.classList.add('active');
+      };
+      panel.appendChild(btn);
+    });
+  }else{
+    var jNames=["쁘띠","스킨","리프팅","바디·주사"];
+    var jColors=["#C05030","#C08B5C","#A0623A","#8B6B50"];
+    jNames.forEach(function(name,i){
+      var btn=document.createElement('button');
+      btn.textContent=name;
+      btn.style.borderLeftColor=jColors[i];
+      btn.style.borderLeftWidth='3px';
+      btn.onclick=function(){
+        var found=null;
+        for(var k=0;k<nodes.length;k++){
+          if(nodes[k].isJ && nodes[k].name===name){found=nodes[k];break;}
+        }
+        if(found){
+          zoomTo(found.x, found.y, 2.2);
+          zoom.focused='j'+i;
+        }
+        panel.querySelectorAll('button').forEach(function(b){b.classList.remove('active')});
+        btn.classList.add('active');
+      };
+      panel.appendChild(btn);
+    });
+  }
+}
+
+// ========== BEFORE/AFTER PHOTO SYSTEM ==========
+var photoData={
+  "비스포크 톤업":[{src:"photos/bespoke_toneup_01.png",label:"색소·톤 개선 2개월"}]
+};
+
+function getPhotoHtml(name,size){
+  var photos=photoData[name];
+  if(!photos||photos.length===0)return '';
+  var cls=size==='small'?'fi-photos':'nc-photos';
+  var thumbCls=size==='small'?'fi-thumb':'nc-thumb';
+  var h='<div class="'+cls+'">';
+  photos.forEach(function(p){
+    h+='<div style="text-align:center">';
+    h+='<img class="'+thumbCls+'" src="'+p.src+'" onclick="event.stopPropagation();openPhotoPopup(\''+p.src+'\')" onerror="this.style.display=\'none\'">';
+    if(p.label)h+='<div class="nc-photo-label">'+p.label+'</div>';
+    h+='</div>';
+  });
+  h+='</div>';
+  return h;
+}
+
+function openPhotoPopup(src){
+  var popup=document.getElementById('photoPopup');
+  document.getElementById('photoPopupImg').src=src;
+  popup.classList.add('show');
+}
+function closePhotoPopup(){
+  document.getElementById('photoPopup').classList.remove('show');
+}
+
+// ========== PACKAGE FILTER PANEL ==========
+var activePkg=null;
+
+function togglePkgPanel(){}
+// ========== NODE DETAIL OVERLAY ==========
+function showNodeCard(nd){
+  var ov=document.getElementById('nodeOverlay');
+  var card=document.getElementById('nodeCard');
+  var lc=nd.color||'#C08B5C';
+  var h='<button class="nc-close" onclick="closeNodeCard()">X</button>';
+  h+='<div class="nc-title">'+nd.name.replace(/\n/g,' ')+'</div>';
+  h+='<div class="nc-tags">';
+  if(nd.cat)h+='<span class="nc-tag" style="background:'+lc+'20;color:'+lc+'">'+nd.cat+'</span>';
+  if(nd.lv)h+='<span class="nc-tag" style="background:rgba(255,255,255,.06);color:#8A7E72">'+nd.lv+'</span>';
+  h+='</div>';
+  if(nd.tip)h+='<div class="nc-body">'+nd.tip+'</div>';
+  if(nd.dur)h+='<div class="nc-section nc-dur"><span class="nc-section-label">효과·지속기간</span>'+nd.dur+'</div>';
+  if(nd.note)h+='<div class="nc-section nc-note"><span class="nc-section-label">[주의] 주의사항</span>'+nd.note+'</div>';
+  if(nd.eff)h+='<div class="nc-section nc-eff">'+nd.eff+'</div>';
+  if(nd.who)h+='<div class="nc-section nc-who"><span class="nc-section-label">이런 분께 추천</span>'+nd.who+'</div>';
+  h+=getPhotoHtml(nd.name.replace(/\n/g,' '),'large');
+  if(lastFlowState)h+='<div onclick="closeNodeCard();returnToGuide()" style="margin-top:14px;padding:10px 14px;background:rgba(192,139,92,.1);border:1px solid rgba(192,139,92,.25);border-radius:10px;cursor:pointer;font-size:13px;color:#C08B5C;text-align:center;font-weight:600;transition:.2s">← 톤즈 가이드로 돌아가기</div>';
+  card.innerHTML=h;
+  ov.classList.add('show');
+}
+function closeNodeCard(){
+  document.getElementById('nodeOverlay').classList.remove('show');
+}
+
+function showPkgPanel(){
+  var panel=document.getElementById('pkgPanel');
+  if(!panel)return;
+  panel.style.display='block';
+  buildPkgPanel();
+}
+function hidePkgPanel(){
+  var panel=document.getElementById('pkgPanel');
+  if(!panel)return;
+  panel.style.display='none';
+  clearPkgHighlight();
+}
+
+function buildPkgPanel(){
+  var panel=document.getElementById('pkgPanel');
+  panel.innerHTML='<div class="pkg-drag-handle" id="pkgDragHandle">⠿</div>'
+    +'<div style="font-size:13px;font-weight:700;color:#2D2A26;padding:4px 8px 8px;border-bottom:1px solid #E8E3DC;margin-bottom:8px">프로그램</div>';
+  // Drag to move panel
+  var handle=document.getElementById('pkgDragHandle');
+  var pdrag={active:false,sx:0,sy:0,ox:0,oy:0};
+  handle.onmousedown=function(e){
+    pdrag.active=true;pdrag.sx=e.clientX;pdrag.sy=e.clientY;
+    pdrag.ox=panel.offsetLeft;pdrag.oy=panel.offsetTop;
+    handle.style.cursor='grabbing';
+    e.preventDefault();
+  };
+  // Restore saved position
+  var saved=localStorage.getItem('pkgPanelPos');
+  if(saved){try{var sp=JSON.parse(saved);panel.style.left=sp.x+'px';panel.style.top=sp.y+'px';panel.style.right='auto'}catch(e){}}
+  document.addEventListener('mousemove',function(e){
+    if(!pdrag.active)return;
+    var nx=pdrag.ox+e.clientX-pdrag.sx;
+    var ny=pdrag.oy+e.clientY-pdrag.sy;
+    panel.style.left=nx+'px';
+    panel.style.top=ny+'px';
+    panel.style.right='auto';
+  });
+  document.addEventListener('mouseup',function(){
+    if(pdrag.active){
+      pdrag.active=false;handle.style.cursor='grab';
+      // Save position to localStorage
+      localStorage.setItem('pkgPanelPos',JSON.stringify({x:panel.offsetLeft,y:panel.offsetTop}));
+    }
+  });
+  packageDefs.forEach(function(cat,ci){
+    var catDiv=document.createElement('div');
+    catDiv.className='pkg-cat';
+    var header=document.createElement('div');
+    header.className='pkg-cat-header';
+    header.textContent='▸ '+cat.cat+' ('+cat.items.length+')';
+    header.onclick=function(){
+      catDiv.classList.toggle('open');
+      header.textContent=(catDiv.classList.contains('open')?'▾ ':'▸ ')+cat.cat+' ('+cat.items.length+')';
+    };
+    catDiv.appendChild(header);
+
+    var body=document.createElement('div');
+    body.className='pkg-cat-body';
+    cat.items.forEach(function(pkg){
+      var item=document.createElement('div');
+      item.className='pkg-item';
+      item.innerHTML='<div class="pkg-name">'+pkg.name+'</div>'
+        +'<div class="pkg-desc">'+pkg.desc+'</div>'
+        +'<div class="pkg-components">구성: '+pkg.components.map(function(c){return c.replace(/\n/g,' ')}).join(' + ')+'</div>';
+      item.onclick=function(e){
+        e.stopPropagation();
+        if(item.classList.contains('active')){
+          item.classList.remove('active');
+          clearPkgHighlight();
+          activePkg=null;
+        }else{
+          // Deactivate others
+          panel.querySelectorAll('.pkg-item.active').forEach(function(el){el.classList.remove('active')});
+          item.classList.add('active');
+          activePkg=pkg;
+          highlightComponents(pkg.components);
+          // Auto-open category
+          if(!catDiv.classList.contains('open')){
+            catDiv.classList.add('open');
+            header.textContent='▾ '+cat.cat+' ('+cat.items.length+')';
+          }
+        }
+      };
+      body.appendChild(item);
+    });
+    catDiv.appendChild(body);
+    panel.appendChild(catDiv);
+  });
+}
+
+// Programmatically activate a package by name (called from consultation guide)
+var lastFlowState=null;
+function activatePkgByName(pkgName){
+  // Switch to mindmap procedure view
+  sw(0);
+  if(needsMode) toggleNeedsMode();
+  setTimeout(function(){
+    showPkgPanel();
+    // Find and activate the package
+    var panel=document.getElementById('pkgPanel');
+    if(!panel)return;
+    var found=false;
+    packageDefs.forEach(function(cat){
+      cat.items.forEach(function(pkg){
+        if(pkg.name===pkgName){
+          // Open category, activate item
+          activePkg=pkg;
+          highlightComponents(pkg.components);
+          // Visually activate in panel
+          panel.querySelectorAll('.pkg-item.active').forEach(function(el){el.classList.remove('active')});
+          panel.querySelectorAll('.pkg-item').forEach(function(el){
+            if(el.querySelector('.pkg-name').textContent===pkgName){
+              el.classList.add('active');
+              // Open parent category
+              var catDiv=el.closest('.pkg-cat');
+              if(catDiv&&!catDiv.classList.contains('open')){
+                catDiv.classList.add('open');
+                var h=catDiv.querySelector('.pkg-cat-header');
+                if(h)h.textContent=h.textContent.replace('▸','▾');
+              }
+              el.scrollIntoView({behavior:'smooth',block:'center'});
+            }
+          });
+          found=true;
+        }
+      });
+    });
+  },150);
+}
+
+// Return to consultation guide from mindmap
+function returnToGuide(){
+  if(lastFlowState){
+    sw(1);
+    flowState=lastFlowState;
+    drawFlow();
+  }else{
+    sw(1);
+  }
+}
+
+function highlightComponents(names){
+  highlightedNames.clear();
+  names.forEach(function(n){highlightedNames.add(n)});
+  draw();
+  // Zoom to fit all highlighted nodes in one view
+  zoomToFitNodes(names);
+}
+
+function zoomToFitNodes(names){
+  var nameSet=new Set(names);
+  var matchedNodes=[];
+  for(var i=0;i<nodes.length;i++){
+    if(nameSet.has(nodes[i].name))matchedNodes.push(nodes[i]);
+  }
+  if(matchedNodes.length===0)return;
+  if(matchedNodes.length===1){
+    zoomTo(matchedNodes[0].x,matchedNodes[0].y,4.0);return;
+  }
+  // Calculate bounding box
+  var minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
+  matchedNodes.forEach(function(nd){
+    var r=nd.r||40;
+    if(nd.x-r<minX)minX=nd.x-r;
+    if(nd.x+r>maxX)maxX=nd.x+r;
+    if(nd.y-r<minY)minY=nd.y-r;
+    if(nd.y+r>maxY)maxY=nd.y+r;
+  });
+  // Add padding
+  var pad=100;
+  minX-=pad;minY-=pad;maxX+=pad;maxY+=pad;
+  var bw=maxX-minX,bh=maxY-minY;
+  var cx=minX+bw/2,cy=minY+bh/2;
+  // Calculate scale to fit
+  var sx=W/bw,sy=H/bh;
+  var scale=Math.min(sx,sy,5.0);
+  scale=Math.max(scale,0.5);
+  zoomTo(cx,cy,scale);
+}
+
+function clearPkgHighlight(){
+  highlightedNames.clear();
+  activePkg=null;
+  draw();
+}
+
+// ========== INIT ==========
+initCanvas();computeLayout();
+// 초기 줌: 노드가 넓게 배치됐으므로 축소해서 전체 표시
+var iz0=getInitZoom(INIT_SCALE);
+zoom.scale=iz0.scale; zoom.target.scale=iz0.scale;
+zoom.tx=iz0.tx; zoom.ty=iz0.ty;
+zoom.target.tx=iz0.tx; zoom.target.ty=iz0.ty;
+draw();
+buildNavPanel();
+showPkgPanel();
+
+// Set initial toggle visual state (시술별 is default)
+document.getElementById('viewLabel').style.color='#8A7E72';
+document.getElementById('viewLabel').style.fontWeight='400';
+
+// ========== URL PARAMETER NAVIGATION ==========
+(function(){
+  var params=new URLSearchParams(window.location.search);
+  var viewParam=params.get('view');
+  var concernParam=params.get('concern');
+  if(!viewParam&&!concernParam)return;
+
+  if(viewParam==='guide'){
+    // Switch to 톤즈 가이드 tab
+    sw(1);
+    if(concernParam){
+      // Find matching concern category in needsTree and auto-click
+      setTimeout(function(){
+        var cats=document.querySelectorAll('.flow-card');
+        for(var i=0;i<cats.length;i++){
+          var title=cats[i].querySelector('.fc-title');
+          if(title&&title.textContent.indexOf(concernParam)>=0){
+            cats[i].click();
+            break;
+          }
+        }
+      },300);
+    }
+  } else if(viewParam==='mindmap'){
+    // Switch to mindmap in 고민별 mode
+    sw(0);
+    if(!needsMode) toggleNeedsMode();
+    if(concernParam){
+      setTimeout(function(){
+        // Find the concern in needsTree and zoom to it
+        var targetNode=null;
+        for(var ni=0;ni<nodes.length;ni++){
+          if(nodes[ni].name&&nodes[ni].name.indexOf(concernParam)>=0&&!nodes[ni].isCenter){
+            targetNode=nodes[ni];break;
+          }
+        }
+        if(targetNode){
+          var tz=4;
+          zoom.target.scale=tz;
+          zoom.target.tx=CX-targetNode.x*tz;
+          zoom.target.ty=CY-targetNode.y*tz;
+          animateZoom();
+        }
+      },500);
+    }
+  }
+})();
+
+// ========== 검색 기능 ==========
+(function(){
+  var sinput = document.getElementById('search-input');
+  var sresults = document.getElementById('search-results');
+
+  // 전체 노드에서 검색 가능한 항목 목록 생성
+  function buildSearchIndex(){
+    var idx = [];
+    tree.j.forEach(function(jn, ji){
+      jn.subs.forEach(function(sub, si){
+        // sub 그룹명
+        idx.push({name: sub.name, path: jn.name, type:'sub', ji:ji, si:si});
+        (sub.items||[]).forEach(function(item){
+          // brand 그룹
+          if(item.brands){
+            idx.push({name: item.n, path: jn.name+' > '+sub.name, type:'brands', ji:ji, si:si, itemName:item.n});
+            item.brands.forEach(function(b){
+              idx.push({name: b.n, path: jn.name+' > '+sub.name+' > '+item.n, type:'leaf', ji:ji, si:si, itemName:item.n, brandName:b.n, nodeRef:b});
+            });
+          } else {
+            idx.push({name: item.n, path: jn.name+' > '+sub.name, type:'leaf', ji:ji, si:si, itemName:item.n, nodeRef:item});
+          }
+        });
+      });
+    });
+    return idx;
+  }
+
+  var searchIndex = [];
+  // nodes가 준비된 후 인덱스 구성
+  setTimeout(function(){ searchIndex = buildSearchIndex(); }, 300);
+
+  function highlight(text, query){
+    if(!query) return text;
+    var re = new RegExp('('+query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');
+    return text.replace(re,'<span class="sr-hl">$1</span>');
+  }
+
+  function doSearch(q){
+    if(!q || q.length < 1){ sresults.innerHTML=''; sresults.classList.remove('show'); return; }
+    var matched = searchIndex.filter(function(item){
+      return item.name.toLowerCase().indexOf(q.toLowerCase()) !== -1;
+    }).slice(0, 15);
+
+    if(matched.length === 0){
+      sresults.innerHTML = '<div class="sr-empty">검색 결과가 없습니다</div>';
+      sresults.classList.add('show');
+      return;
+    }
+
+    sresults.innerHTML = matched.map(function(item, i){
+      return '<div class="sr-item" data-idx="'+i+'">'
+        +'<div class="sr-name">'+highlight(item.name, q)+'</div>'
+        +'<div class="sr-path">'+item.path+'</div>'
+        +'</div>';
+    }).join('');
+    sresults.classList.add('show');
+
+    // 클릭 이동 + 툴팁 표시
+    sresults.querySelectorAll('.sr-item').forEach(function(el, i){
+      el.addEventListener('click', function(){
+        var item = matched[i];
+        navigateTo(item);
+        sresults.classList.remove('show');
+        sinput.value = '';
+      });
+    });
+  }
+
+  function buildTooltipHtml(nd){
+    var lc = nd.color || '#fff';
+    var h = '<b>' + nd.name + '</b>';
+    if(nd.cat) h += '<span class="t" style="background:'+lc+'30;color:'+lc+'">'+nd.cat+'</span>';
+    if(nd.lv)  h += '<span class="t" style="background:rgba(255,255,255,.08);color:#8A7E72">'+nd.lv+'</span>';
+    if(nd.tip) h += '<div style="margin-top:4px;font-size:12px;color:#b0a89e">'+nd.tip+'</div>';
+    if(nd.dur) h += '<div style="margin-top:5px;padding:5px 9px;background:rgba(160,98,58,0.12);border-left:3px solid #A0623A;border-radius:0 5px 5px 0;font-size:11.5px;color:#D4B896"><span style="font-size:10px;font-weight:700;color:#A0623A;display:block;margin-bottom:1px">효과·지속기간</span>'+nd.dur+'</div>';
+    if(nd.note) h += '<div style="margin-top:5px;padding:5px 9px;background:rgba(192,80,48,0.1);border-left:3px solid #C05030;border-radius:0 5px 5px 0;font-size:11.5px;color:#E8C4A8"><span style="font-size:10px;font-weight:700;color:#C05030;display:block;margin-bottom:1px">[주의] 주의사항</span>'+nd.note+'</div>';
+    if(nd.eff) h += '<div style="margin-top:5px;padding:5px 9px;background:rgba(192,139,92,0.1);border-left:3px solid #C08B5C;border-radius:0 5px 5px 0;font-size:11.5px;color:#D4B896">'+nd.eff+'</div>';
+    if(nd.who) h += '<div class="who-box"><span class="who-label">이런 분께 추천</span>'+nd.who+'</div>';
+    return h;
+  }
+
+  function showSearchTooltip(nd){
+    var h = buildTooltipHtml(nd);
+    tip.innerHTML = h;
+    tip.classList.add('show');
+    // 화면 중앙 우측에 고정 표시
+    tip.style.left = (innerWidth/2 - 150) + 'px';
+    tip.style.top = '70px';
+    tip.style.maxWidth = '360px';
+    tip.style.pointerEvents = 'auto';
+    tip.style.cursor = 'pointer';
+    tip.title = '클릭하면 닫힘';
+    tip.onclick = function(){ hideT(); tip.style.pointerEvents='none'; tip.onclick=null; };
+  }
+
+  function navigateTo(item){
+    sw(0);
+    setTimeout(function(){
+      var found = null;
+      nodes.forEach(function(nd){
+        if(!found && nd.name === item.name){
+          if(nd.isL || nd.isBrand || nd.isSub || nd.isSub2) found = nd;
+        }
+      });
+      if(found){
+        // 바로 해당 노드로 줌
+        zoomTo(found.x, found.y, 5.5);
+        highlightedNames.add(found.name);
+        draw();
+        setTimeout(function(){
+          highlightedNames.delete(found.name);
+          draw();
+        }, 2500);
+        // 툴팁 표시
+        setTimeout(function(){ showSearchTooltip(found); }, 500);
+      }
+    }, 100);
+  }
+
+  sinput.addEventListener('input', function(){ doSearch(this.value.trim()); });
+  sinput.addEventListener('focus', function(){ if(this.value.trim()) doSearch(this.value.trim()); });
+  document.addEventListener('click', function(e){
+    if(!e.target.closest('#search-box') && !e.target.closest('#search-results')){
+      sresults.classList.remove('show');
+    }
+  });
+  sinput.addEventListener('keydown', function(e){
+    if(e.key === 'Escape'){ sresults.classList.remove('show'); sinput.blur(); }
+  });
+})();
+window.addEventListener('resize',function(){initCanvas();computeLayout();if(zoom.scale<=(INIT_SCALE+0.07)){var izr=getInitZoom(INIT_SCALE);zoom.scale=izr.scale;zoom.tx=izr.tx;zoom.ty=izr.ty;zoom.target.scale=izr.scale;zoom.target.tx=izr.tx;zoom.target.ty=izr.ty;}draw()});
+
+// Hide hint after 5s
+setTimeout(function(){if(zoom.scale<=1.05)zoomHint.classList.add('hide')},6000);
+
+// ========== CONSULTATION FLOWCHART ==========
+var tmDone=false;
+var flowState={catIdx:-1, subIdx:-1, tierIdx:-1};
+
+// Need icons for categories
+var needIconColors=needsTree.n.map(function(n){return n.color});
+var needDescs=[
+  "이마주름, 팔자, 눈가, 목주름, 볼처짐, 턱라인 처짐",
+  "볼꺼짐, 이마, 관자, 눈밑, 코, 입술, 턱끝, 사각턱, 이중턱",
+  "기미, 잡티, 색소, 홍조, 피부재생, 수분, 물광, 민감피부",
+  "화농성여드름, 좁쌀, 붉은자국, 모공, 흉터, 피지, 블랙헤드",
+  "복부, 팔뚝, 부유방, 종아리, 승모근, 허벅지, 식욕억제",
+  "피로, 면역, 갱년기, 간해독, 근육강화, 항산화, 예방접종"
+];
+
+function flowReset(){
+  flowState={catIdx:-1,subIdx:-1,tierIdx:-1};
+  drawFlow();
+}
+
+function drawFlow(){
+  var wrap=document.getElementById('flow-wrap');
+  if(!wrap)return;
+  wrap.innerHTML='';
+
+  var itemLookup={};
+  tree.j.forEach(function(j){j.subs.forEach(function(s){s.items.forEach(function(it){
+    itemLookup[it.n]=it;
+    if(it.brands) it.brands.forEach(function(b){ itemLookup[b.n]=b; });
+  })})});
+
+  var rankColors=['','#D4A030','#8A7E72','#A0623A','#6A6560','#6A6560'];
+  var CC2={"보톡스":"#C05030","필러":"#D4885A","바이오ST":"#E0A878","리프팅":"#A0623A","색소":"#C08B5C","모공흉터":"#C9956B","기타":"#D4B088","바디":"#8B6B50","수액":"#A88B70"};
+
+  // Column 1: Need categories
+  var col1=document.createElement('div');col1.className='flow-col col-cat';
+  col1.innerHTML='<div class="flow-col-header">고민</div>';
+  needsTree.n.forEach(function(need,ni){
+    var item=document.createElement('div');
+    item.className='flow-item'+(flowState.catIdx===ni?' selected':'');
+    item.innerHTML='<div class="fi-name" style="color:'+need.color+'">'+need.name+'</div>'
+      +'<div class="fi-count">'+need.subs.length+'개 세부</div>';
+    item.onclick=function(){
+      flowState.catIdx=ni;flowState.subIdx=-1;flowState.tierIdx=-1;
+      drawFlow();
+    };
+    col1.appendChild(item);
+  });
+  wrap.appendChild(col1);
+
+  // Column 2: Sub-concerns (if category selected)
+  if(flowState.catIdx>=0){
+    var cat=needsTree.n[flowState.catIdx];
+    var col2=document.createElement('div');col2.className='flow-col col-sub';
+    col2.innerHTML='<div class="flow-col-header" style="color:'+cat.color+'">'+cat.name+'</div>';
+    cat.subs.forEach(function(sub,si){
+      var pc=(sub.tiers||[]).reduce(function(s,t){return s+(t.rank>0?t.programs.length:0)},0);
+      var item=document.createElement('div');
+      item.className='flow-item'+(flowState.subIdx===si?' selected':'');
+      item.style.borderLeftColor=cat.color;
+      item.innerHTML='<div class="fi-name">'+sub.name+'</div>'
+        +'<div class="fi-count">'+pc+'개 프로그램</div>';
+      item.onclick=function(){
+        flowState.subIdx=si;flowState.tierIdx=-1;
+        drawFlow();
+      };
+      col2.appendChild(item);
+    });
+    wrap.appendChild(col2);
+  }
+
+  // Column 3: Tiers (if sub selected)
+  if(flowState.catIdx>=0&&flowState.subIdx>=0){
+    var cat=needsTree.n[flowState.catIdx];
+    var sub=cat.subs[flowState.subIdx];
+    var tiers=sub.tiers||[];
+    var col3=document.createElement('div');col3.className='flow-col col-tier';
+    col3.innerHTML='<div class="flow-col-header">'+sub.name+' 상담 위계</div>';
+    tiers.forEach(function(tier,ti){
+      if(tier.rank===0)return; // skip addons
+      var rc=rankColors[Math.min(tier.rank,5)];
+      var item=document.createElement('div');
+      item.className='flow-item fi-tier'+(flowState.tierIdx===ti?' selected':'');
+      item.style.borderLeftColor=rc;
+      item.innerHTML='<div style="display:flex;align-items:center"><span class="fi-rank" style="background:'+rc+'">'+tier.rank+'</span><span class="fi-name">'+tier.name+'</span></div>'
+        +'<div class="fi-desc">'+tier.desc+'</div>';
+      item.onclick=function(){
+        flowState.tierIdx=ti;
+        drawFlow();
+      };
+      col3.appendChild(item);
+    });
+    wrap.appendChild(col3);
+  }
+
+  // Column 4: Programs (if tier selected)
+  if(flowState.catIdx>=0&&flowState.subIdx>=0&&flowState.tierIdx>=0){
+    var cat=needsTree.n[flowState.catIdx];
+    var sub=cat.subs[flowState.subIdx];
+    var tier=(sub.tiers||[])[flowState.tierIdx];
+    if(tier){
+      var col4=document.createElement('div');col4.className='flow-col col-prog';
+      col4.innerHTML='<div class="flow-col-header">'+tier.name+' 프로그램</div>';
+      tier.programs.forEach(function(progName){
+        var ref=itemLookup[progName]||{};
+        var cc=CC2[ref.c]||cat.color;
+        var item=document.createElement('div');
+        item.className='flow-item fi-program';
+        item.style.borderLeftColor=cc;
+        var shortTip=ref.t?(ref.t.length>80?ref.t.substring(0,80)+'…':ref.t):'';
+        var photoHtml=getPhotoHtml(progName.replace(/\n/g,' '),'small');
+        item.innerHTML='<div class="fi-name">'+progName.replace(/\n/g,' ')+'</div>'
+          +(shortTip?'<div class="fi-desc">'+shortTip+'</div>':'')
+          +photoHtml;
+        item.onclick=function(){
+          lastFlowState=JSON.parse(JSON.stringify(flowState));
+          if(pkgNameSet.has(progName)){
+            activatePkgByName(progName);
+          }else{
+            sw(0);
+            setTimeout(function(){
+              if(needsMode)toggleNeedsMode();
+              setTimeout(function(){
+                var found=null;
+                for(var k=0;k<nodes.length;k++){
+                  if(nodes[k].name===progName&&(nodes[k].isL||nodes[k].isBrand||nodes[k].isSub2)){found=nodes[k];break;}
+                }
+                if(found){
+                  zoomTo(found.x,found.y,5.5);
+                  highlightedNames.add(found.name);draw();
+                  setTimeout(function(){highlightedNames.delete(found.name);draw()},2500);
+                }
+              },200);
+            },100);
+          }
+        };
+        col4.appendChild(item);
+      });
+      wrap.appendChild(col4);
+    }
+  }
+
+  // Auto-scroll to show latest column
+  setTimeout(function(){wrap.scrollLeft=wrap.scrollWidth},50);
+  return; // skip old level-based code below
+
+  var CC2={"보톡스":"#C05030","필러":"#D4885A","바이오ST":"#E0A878","리프팅":"#A0623A","색소":"#C08B5C","모공흉터":"#C9956B","기타":"#D4B088","바디":"#8B6B50","수액":"#A88B70"};
+  var badgeColors={"1순위":"#D4A030","핵심":"#C08B5C","업셀":"#8B6B50","진입":"#B0A89E","2순위":"#8A7E72"};
+
+  if(flowState.level===0){
+    // Level 0: Show 6 need categories
+    bread.innerHTML='<span class="flow-current">톤즈 가이드</span><span style="margin-left:8px;font-size:11px;color:#6a6560">고객의 고민을 선택하세요</span>';
+    cards.innerHTML='';
+    cards.style.display='grid';
+    needsTree.n.forEach(function(need,i){
+      var card=document.createElement('div');
+      card.className='flow-card';
+      card.style.borderTop='3px solid '+need.color;
+      card.innerHTML='<div class="fc-icon" style="width:24px;height:24px;border-radius:50%;background:'+needIconColors[i]+';margin-bottom:8px"></div>'
+        +'<div class="fc-title">'+need.name+'</div>'
+        +'<div class="fc-desc">'+needDescs[i]+'</div>'
+        +'<div class="fc-count">'+need.subs.length+'개 고민</div>'
+        +'<div class="fc-arrow">→</div>';
+      card.onclick=function(){
+        flowState.level=1; flowState.catIdx=i;
+        drawFlow();
+      };
+      cards.appendChild(card);
+    });
+
+  }else if(flowState.level===1){
+    // Level 1: Show sub-concerns for selected category
+    var cat=needsTree.n[flowState.catIdx];
+    bread.innerHTML='<span class="flow-home" onclick="flowReset()">톤즈 가이드</span>'
+      +'<span class="flow-sep">›</span>'
+      +'<span class="flow-current" style="color:'+cat.color+'">'+cat.name+'</span>'
+      +'<span style="margin-left:8px;font-size:11px;color:#6a6560">세부 고민을 선택하세요</span>';
+    cards.innerHTML='';
+    cards.style.display='grid';
+    cat.subs.forEach(function(sub,si){
+      var card=document.createElement('div');
+      card.className='flow-card';
+      card.style.borderLeft='3px solid '+cat.color;
+      var progCount=(sub.tiers||[]).reduce(function(s,t){return s+(t.rank>0?t.programs.length:0)},0);
+      card.innerHTML='<div class="fc-title">'+sub.name+'</div>'
+        +'<div class="fc-desc">추천 시술 '+progCount+'개 프로그램</div>'
+        +'<div class="fc-arrow">→</div>';
+      card.onclick=function(){
+        flowState.level=2; flowState.subIdx=si;
+        drawFlow();
+      };
+      cards.appendChild(card);
+    });
+
+  }else if(flowState.level===2){
+    // Level 2: Show consultation tiers (vertical step cards)
+    var cat=needsTree.n[flowState.catIdx];
+    var sub=cat.subs[flowState.subIdx];
+    bread.innerHTML='<span class="flow-home" onclick="flowReset()">톤즈 가이드</span>'
+      +'<span class="flow-sep">›</span>'
+      +'<span class="flow-home" onclick="flowState.level=1;drawFlow()" style="color:'+cat.color+'">'+cat.name+'</span>'
+      +'<span class="flow-sep">›</span>'
+      +'<span class="flow-current">'+sub.name+'</span>';
+    cards.innerHTML='';
+    cards.style.display='block';
+
+    // Combo card (if exists)
+    if(sub.combo){
+      var combo=sub.combo;
+      var comboCard=document.createElement('div');
+      comboCard.className='flow-card';
+      comboCard.style.cssText='border:2px solid #D4A030;background:linear-gradient(135deg,rgba(212,160,48,0.08),rgba(212,160,48,0.02));margin-bottom:16px';
+      comboCard.innerHTML='<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px"><span style="font-size:18px">[추천] </span><span class="fc-title" style="margin:0">'+combo.name+'</span></div>'
+        +'<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">'+combo.items.map(function(it){
+          var ref2=itemLookup[it]||{};
+          var cc2=CC2[ref2.c]||cat.color;
+          return '<span style="padding:4px 10px;border-radius:99px;font-size:11px;font-weight:600;background:'+cc2+'18;color:'+cc2+';border:1px solid '+cc2+'30">'+it.replace(/\n/g,' ')+'</span>';
+        }).join('<span style="color:#D4A030;font-weight:700"> + </span>')+'</div>'
+        +'<div class="fc-desc" style="color:#D4A030">'+combo.desc+'</div>';
+      cards.appendChild(comboCard);
+    }
+
+    // Tier step cards
+    var rankColors=['','#D4A030','#8A7E72','#A0623A','#6A6560','#6A6560'];
+    var tiers=sub.tiers||[];
+    tiers.forEach(function(tier,ti){
+      if(tier.rank===0){
+        // Addon row (dashed, dimmed)
+        var step=document.createElement('div');
+        step.className='tier-step tier-addon';
+        step.innerHTML='<div class="tier-rank"><div class="rank-num" style="background:#6A6560;font-size:10px">+</div></div>'
+          +'<div class="tier-body"><span class="tier-name">'+tier.name+'</span>'
+          +'<div class="tier-desc">'+tier.desc+'</div>'
+          +'<div class="tier-programs">'+tier.programs.map(function(p){return p.replace(/\n/g,' ')}).join(' · ')+'</div></div>';
+        cards.appendChild(step);
+        return;
+      }
+      var rc=rankColors[Math.min(tier.rank,5)];
+      var step=document.createElement('div');
+      step.className='tier-step';
+      var tagHtml=tier.tag?'<span class="tier-tag" style="background:'+rc+'22;color:'+rc+'">'+tier.tag+'</span>':'';
+      step.innerHTML='<div class="tier-rank"><div class="rank-num" style="background:'+rc+'">'+tier.rank+'</div><div class="rank-line" style="background:linear-gradient(to bottom,'+rc+',transparent)"></div></div>'
+        +'<div class="tier-body"><span class="tier-name">'+(tier.programs.length===1?tier.programs[0].replace(/\n/g,' '):tier.name)+'</span>'+tagHtml
+        +'<div class="tier-desc">'+tier.desc+'</div>'
+        +'<div class="tier-programs">'+tier.programs.map(function(p){return p.replace(/\n/g,' ')}).join(' · ')+'</div>'
+        +'<div class="fc-arrow">→</div></div>';
+      step.querySelector('.tier-body').onclick=function(){
+        if(tier.programs.length===1){
+          var progName=tier.programs[0];
+          lastFlowState=JSON.parse(JSON.stringify(flowState));
+          if(pkgNameSet.has(progName)){
+            activatePkgByName(progName);return;
+          }
+          sw(0);
+          setTimeout(function(){
+            if(needsMode) toggleNeedsMode();
+            setTimeout(function(){
+              var found=null;
+              for(var k=0;k<nodes.length;k++){
+                if(nodes[k].name===progName && (nodes[k].isL||nodes[k].isBrand||nodes[k].isSub2)){found=nodes[k];break;}
+              }
+              if(found){
+                zoomTo(found.x, found.y, 5.5);
+                highlightedNames.add(found.name);
+                draw();
+                setTimeout(function(){highlightedNames.delete(found.name);draw()},2500);
+              }
+            },200);
+          },100);
+        }else{
+          flowState.level=3; flowState.groupIdx=ti;
+          drawFlow();
+        }
+      };
+      cards.appendChild(step);
+    });
+
+  }else if(flowState.level===3){
+    // Level 3: Show programs within selected tier
+    var cat=needsTree.n[flowState.catIdx];
+    var sub=cat.subs[flowState.subIdx];
+    var tier=(sub.tiers||[])[flowState.groupIdx];
+    if(!tier){flowState.level=2;drawFlow();return;}
+    bread.innerHTML='<span class="flow-home" onclick="flowReset()">톤즈 가이드</span>'
+      +'<span class="flow-sep">›</span>'
+      +'<span class="flow-home" onclick="flowState.level=1;drawFlow()" style="color:'+cat.color+'">'+cat.name+'</span>'
+      +'<span class="flow-sep">›</span>'
+      +'<span class="flow-home" onclick="flowState.level=2;drawFlow()">'+sub.name+'</span>'
+      +'<span class="flow-sep">›</span>'
+      +'<span class="flow-current">'+tier.name+'</span>';
+    cards.innerHTML='';
+    cards.style.display='grid';
+    tier.programs.forEach(function(progName){
+      var ref=itemLookup[progName]||{};
+      var card=document.createElement('div');
+      card.className='flow-card fc-proc';
+      var catColor=CC2[ref.c]||cat.color;
+      card.style.borderLeftColor=catColor;
+      var html='<div class="fc-title">'+progName.replace(/\n/g,' ')+'</div>';
+      if(ref.t){
+        var shortTip=ref.t.length>120?ref.t.substring(0,120)+'…':ref.t;
+        html+='<div class="fc-desc">'+shortTip+'</div>';
+      }
+      if(ref.l){
+        var bc=badgeColors[ref.l]||'#B0A89E';
+        html+='<span class="fc-badge" style="background:'+bc+'22;color:'+bc+'">'+ref.l+'</span>';
+      }
+      if(ref.w){
+        var shortWho=ref.w.length>100?ref.w.substring(0,100)+'…':ref.w;
+        html+='<div class="fc-who"><b style="font-size:10px;color:#C08B5C;display:block;margin-bottom:2px">이런 분께 추천</b>'+shortWho+'</div>';
+      }
+      card.innerHTML=html;
+      card.onclick=function(){
+        // Save flow state for "return to guide" feature
+        lastFlowState=JSON.parse(JSON.stringify(flowState));
+        // Check if this program is a package — if so, activate package filter
+        if(pkgNameSet.has(progName)){
+          activatePkgByName(progName);
+          return;
+        }
+        // Otherwise jump to individual node in mindmap
+        sw(0);
+        setTimeout(function(){
+          if(needsMode) toggleNeedsMode();
+          setTimeout(function(){
+            var found=null;
+            for(var k=0;k<nodes.length;k++){
+              if(nodes[k].name===progName && (nodes[k].isL||nodes[k].isBrand||nodes[k].isSub2)){found=nodes[k];break;}
+            }
+            if(found){
+              zoomTo(found.x, found.y, 5.5);
+              highlightedNames.add(found.name);
+              draw();
+              setTimeout(function(){highlightedNames.delete(found.name);draw()},2500);
+            }
+          },200);
+        },100);
+      };
+      cards.appendChild(card);
+    });
+  }
+}
+
+function drawTM(){ drawFlow(); }
+
+function initCustomerGuide(){
+  renderPhilosophy();
+  renderChat();
+  renderStaff();
+}
+
+function renderPhilosophy(){
+  var el=document.getElementById('cg-philosophy');
+  el.innerHTML=
+    '<div class="cg-hero">'
+    +'<div class="cg-hero-title">당신의 피부를 이해하는 곳</div>'
+    +'<div class="cg-hero-sub">톤즈의원 수원광교점</div>'
+    +'</div>'
+    +'<div class="cg-cards">'
+    +'<div class="cg-card">'
+    +'<div class="cg-card-num">FIRST ON</div>'
+    +'<div class="cg-card-title">아름다움</div>'
+    +'<div class="cg-card-accent">피부의 ON</div>'
+    +'<div class="cg-card-body">여러 에너지를 동시에 켜서 시너지를 만듭니다. 레이저의 열, 고주파의 에너지, 초음파의 진동을 고객에게 맞는 조합으로 큐레이션합니다.</div>'
+    +'<div class="cg-card-tags"><span class="cg-card-tag">시너지</span><span class="cg-card-tag">큐레이션</span><span class="cg-card-tag">복합 설계</span></div>'
+    +'</div>'
+    +'<div class="cg-card">'
+    +'<div class="cg-card-num">SECOND ON</div>'
+    +'<div class="cg-card-title">성장</div>'
+    +'<div class="cg-card-accent">이해의 ON</div>'
+    +'<div class="cg-card-body">시술 과정을 설명하며 고객이 자기 피부를 이해하기 시작합니다. 왜 이 조합인지, 어떤 원리인지. 이해하는 순간 만족도가 달라집니다.</div>'
+    +'<div class="cg-card-tags"><span class="cg-card-tag">원리 설명</span><span class="cg-card-tag">맞춤 설계</span><span class="cg-card-tag">고객 이해</span></div>'
+    +'</div>'
+    +'<div class="cg-card">'
+    +'<div class="cg-card-num">THIRD ON</div>'
+    +'<div class="cg-card-title">지속가능성</div>'
+    +'<div class="cg-card-accent">관계의 ON</div>'
+    +'<div class="cg-card-body">한번 켜진 ON은 꺼지지 않습니다. 피부 사진이 축적되고, 다음 조합이 큐레이션되고, 재방문할 때마다 관계가 깊어집니다.</div>'
+    +'<div class="cg-card-tags"><span class="cg-card-tag">피부 기록</span><span class="cg-card-tag">지속 관리</span><span class="cg-card-tag">관계의 큐레이션</span></div>'
+    +'</div>'
+    +'</div>'
+    +'<div class="cg-cta"><button class="cg-cta-btn" onclick="scrollToChat()">고민 상담 시작하기</button></div>';
+}
+
+function scrollToChat(){
+  document.getElementById('cg-chat').scrollIntoView({behavior:'smooth'});
+}
+
+// ========== CUSTOMER GUIDE: AI CHAT (Stage-driven) ==========
+var cgMessages=[];
+var cgSessionId=null;
+var cgStage=0; // 0:visit, 0.5:revisit-purpose, 0.6:revisit-prev-tx, 0.7:revisit-satisfaction, 1:concern, 2:sub-concern, 3:experience, 4:priority, 5:free, 6:done
+var cgSelectedConcerns=[];
+var cgIsRevisit=false;
+var CG_ENDPOINT='https://oauwuwnqzjpjsofzmmwe.supabase.co/functions/v1/tones-concierge';
+var SB_URL='https://oauwuwnqzjpjsofzmmwe.supabase.co';
+var SB_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9hdXd1d25xempwanNvZnptbXdlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0NTE3NjksImV4cCI6MjA4OTAyNzc2OX0.oHIn9-V_j6ErtrKCmMsdq9PIKyVSHOWmb7mDtBzY3-U';
+
+var CG_SUB_CONCERNS={
+  '주름/탄력':['미세주름','팔자주름','목주름/손등주름','볼 처짐/이중턱','전반적 탄력 저하'],
+  '색소/붉은기':['기미/색소침착','잡티/주근깨','붉은기/열감','피부탄력','속건조/당김','칙칙함'],
+  '모공/흉터':['화농성 여드름','좁쌀 여드름','붉은 자국','모공 넓음','여드름 흉터','피지/블랙헤드'],
+  '볼륨/윤곽':['볼꺼짐','이마/관자 꺼짐','눈밑꺼짐/다크서클','코 라인','입술/입꼬리','사각턱/이중턱','광대 도드라짐'],
+  '바디':['복부/러브핸들','팔뚝/부유방','허벅지','엉덩이','종아리/승모근','식욕억제/다이어트'],
+  '컨디션/항노화':['피로/무기력','면역력','갱년기/호르몬','간 해독','근육/대사','종합 항산화']
+};
+
+function renderChat(){
+  var el=document.getElementById('cg-chat');
+  el.innerHTML=
+    '<div class="cg-chat-header">'
+    +'<div class="cg-chat-label">AI CONCIERGE</div>'
+    +'<div class="cg-chat-title">상담 전 간단한 안내를 도와드릴게요</div>'
+    +'<div class="cg-chat-sub">고객님께 맞는 상담을 준비해드립니다</div>'
+    +'</div>'
+    +'<div class="cg-offline" id="cgOffline">네트워크 연결을 확인해주세요</div>'
+    +'<div class="cg-messages" id="cgMessages"></div>'
+    +'<div class="cg-input-bar">'
+    +'<input class="cg-input" id="cgInput" type="text" placeholder="편하게 입력해주세요..." onkeydown="if(event.key===\'Enter\'&&!event.isComposing)cgSend()">'
+    +'<button class="cg-send" id="cgSendBtn" onclick="cgSend()">&#8593;</button>'
+    +'</div>';
+  cgMessages=[];
+  cgStage=0;
+  cgSelectedConcerns=[];
+  cgIsRevisit=false;
+  cgSessionId=crypto.randomUUID();
+  cgLogSession();
+  cgAddSys('안녕하세요, 톤즈의원입니다. 상담 전에 몇 가지 여쭤보고, 고객님께 맞는 상담을 준비해드릴게요.');
+  cgShowButtons('cgVisit',[
+    {label:'처음 방문이에요',value:'처음이에요'},
+    {label:'다녀본 적 있어요',value:'네, 다녀본 적 있어요'}
+  ],false);
+}
+
+// --- Core UI helpers ---
+function cgAddSys(text){
+  cgMessages.push({role:'assistant',content:text});
+  var c=document.getElementById('cgMessages');
+  var d=document.createElement('div');d.className='cg-msg cg-msg-sys';d.textContent=text;
+  c.appendChild(d);c.scrollTop=c.scrollHeight;
+}
+function cgAddUsr(text){
+  cgMessages.push({role:'user',content:text});
+  var c=document.getElementById('cgMessages');
+  var d=document.createElement('div');d.className='cg-msg cg-msg-user';d.textContent=text;
+  c.appendChild(d);c.scrollTop=c.scrollHeight;
+}
+function cgShowLoading(){
+  var c=document.getElementById('cgMessages');
+  var d=document.createElement('div');d.className='cg-msg cg-msg-loading';d.id='cgLoading';d.textContent='...';
+  c.appendChild(d);c.scrollTop=c.scrollHeight;
+}
+function cgHideLoading(){var e=document.getElementById('cgLoading');if(e)e.remove();}
+
+// --- Button system ---
+// multiSelect: false = single click sends, true = multi-select with "선택 완료" button
+function cgShowButtons(id,opts,multiSelect){
+  var c=document.getElementById('cgMessages');
+  var wrap=document.createElement('div');wrap.className='cg-chips';wrap.id=id;
+  if(!multiSelect){
+    opts.forEach(function(o){
+      var btn=document.createElement('button');btn.className='cg-chip';btn.textContent=o.label;
+      btn.onclick=function(){document.getElementById(id).remove();cgOnSelect(o.value);};
+      wrap.appendChild(btn);
+    });
+  } else {
+    var selected=[];
+    opts.forEach(function(o){
+      var btn=document.createElement('button');btn.className='cg-chip';btn.textContent=o.label;
+      btn.onclick=function(){
+        var idx=selected.indexOf(o.value);
+        if(idx>=0){selected.splice(idx,1);btn.style.background='#FFFFFF';btn.style.borderColor='#E8E3DC';btn.style.color='#4A4540';}
+        else{selected.push(o.value);btn.style.background='rgba(192,139,92,0.12)';btn.style.borderColor='#C08B5C';btn.style.color='#A0623A';}
+      };
+      wrap.appendChild(btn);
+    });
+    var sendBtn=document.createElement('button');sendBtn.className='cg-chip';
+    sendBtn.style.background='#E87A00';sendBtn.style.color='#FFFFFF';sendBtn.style.borderColor='#E87A00';sendBtn.style.fontWeight='600';
+    sendBtn.textContent='선택 완료';
+    sendBtn.onclick=function(){if(selected.length===0)return;document.getElementById(id).remove();cgOnSelect(selected.join(', '));};
+    wrap.appendChild(sendBtn);
+  }
+  c.appendChild(wrap);c.scrollTop=c.scrollHeight;
+}
+
+// --- Stage machine ---
+function cgOnSelect(value){
+  cgAddUsr(value);
+  cgLogMessage('user',value);
+
+  if(cgStage===0){
+    // Stage 0: visit type selected
+    if(value.indexOf('다녀본')>=0||value.indexOf('재방문')>=0){
+      // Revisit -> show purpose buttons
+      cgIsRevisit=true;
+      cgStage=0.5;
+      cgCallAI(value,function(){
+        cgAddSys('다시 찾아주셨군요! 오늘은 어떤 이유로 방문하셨어요?');
+        cgShowButtons('cgRevisitPurpose',[
+          {label:'기존 시술 유지/관리',value:'기존 시술 유지 및 관리 목적으로 방문했어요'},
+          {label:'새로운 고민 상담',value:'새로운 고민이 있어서 상담받고 싶어요'},
+          {label:'둘 다',value:'기존 시술 관리도 하고 새로운 고민도 상담받고 싶어요'}
+        ],false);
+      });
+    } else {
+      // First visit -> show concern chips
+      cgStage=1;
+      cgCallAI(value,function(){
+        cgShowConcernButtons();
+      });
+    }
+  }
+  else if(cgStage===0.5){
+    // Stage 0.5: revisit purpose selected
+    if(value.indexOf('유지')>=0&&value.indexOf('새로운')<0&&value.indexOf('둘')<0){
+      // Maintenance only -> ask what treatment they got
+      cgStage=0.6;
+      cgCallAI(value,function(){
+        cgAddSys('이전에 어떤 시술을 받으셨는지 간단히 알려주시면, 상담 준비에 도움이 돼요.');
+        // Free text input
+      });
+    } else {
+      // New concern or both -> show concern chips
+      cgStage=1;
+      cgCallAI(value,function(){
+        cgShowConcernButtons();
+      });
+    }
+  }
+  else if(cgStage===0.6){
+    // Stage 0.6: revisit - previous treatment entered (free text), ask satisfaction
+    cgStage=0.7;
+    cgCallAI(value,function(){
+      cgAddSys('시술을 받고 불편한 건 없으셨나요? 효과는 어떠셨어요?');
+      cgShowButtons('cgSatisfaction',[
+        {label:'만족스러웠어요',value:'만족스러웠어요'},
+        {label:'보통이었어요',value:'보통이었어요'},
+        {label:'기대에 못 미쳤어요',value:'기대보다 효과가 부족했어요'},
+        {label:'불편한 점이 있었어요',value:'불편한 점이 있었어요'}
+      ],false);
+    });
+  }
+  else if(cgStage===0.7){
+    // Stage 0.7: satisfaction answered -> ask additional notes then wrap up
+    cgStage=5;
+    cgCallAI(value,function(){
+      cgAddSys('상담 전에 혹시 더 궁금하신 점이나, 상담실장님께 꼭 전해드리고 싶은 게 있으세요?');
+      cgShowButtons('cgExtra',[
+        {label:'아니요, 괜찮아요',value:'특별히 없어요'},
+      ],false);
+    });
+  }
+  else if(cgStage===1){
+    // Stage 1 -> 2: concerns selected, show sub-concerns
+    cgStage=2;
+    cgSelectedConcerns=value.split(', ');
+    var primary=cgSelectedConcerns[0];
+    var subs=CG_SUB_CONCERNS[primary]||[];
+    if(subs.length>0){
+      cgCallAI(value,function(){
+        cgAddSys('더 구체적으로 어떤 부분이 신경 쓰이세요?');
+        cgShowButtons('cgSub',subs.map(function(s){return{label:s,value:s}}),true);
+      });
+    } else {
+      cgStage=3;
+      cgCallAI(value,function(){cgShowExpButtons();});
+    }
+  }
+  else if(cgStage===2){
+    // Stage 2 -> 3: sub-concern selected, show experience yes/no
+    cgStage=3;
+    cgCallAI(value,function(){cgShowExpButtons();});
+  }
+  else if(cgStage===3){
+    // Stage 3 -> 4: experience answered, show priority chips
+    cgStage=4;
+    cgCallAI(value,function(){
+      cgAddSys('시술을 고르실 때 가장 중요하게 생각하시는 게 있으세요? (최대 2개)');
+      cgShowButtons('cgPriority',[
+        {label:'확실한 효과',value:'확실한 효과'},{label:'오래 유지되는 것',value:'오래 유지되는 것'},
+        {label:'가격 대비 만족도',value:'가격 대비 만족도'},{label:'자연스러운 결과',value:'자연스러운 결과'},
+        {label:'통증이 적은 것',value:'통증이 적은 것'}
+      ],true);
+    });
+  }
+  else if(cgStage===4){
+    // Stage 4 -> 5: priorities selected, ask additional notes
+    cgStage=5;
+    cgCallAI(value,function(){
+      cgAddSys('상담 전에 혹시 더 궁금하신 점이나, 상담실장님께 꼭 전해드리고 싶은 게 있으세요?');
+      cgShowButtons('cgExtra',[
+        {label:'아니요, 괜찮아요',value:'특별히 없어요'},
+      ],false);
+      // 자유 입력도 가능
+    });
+  }
+  else if(cgStage===5){
+    // Stage 5 -> 6: wrap up
+    cgStage=6;
+    cgCallAI(value,function(data){
+      if(data&&data.profile) cgShowProfile(data.profile);
+    });
+  }
+}
+
+function cgShowConcernButtons(){
+  cgAddSys('고객님 피부에 어떤 고민이 있으세요? 여러 개 선택할 수 있어요.');
+  cgShowButtons('cgConcern',[
+    {label:'주름/탄력',value:'주름/탄력'},{label:'색소/붉은기',value:'색소/붉은기'},
+    {label:'모공/흉터',value:'모공/흉터'},{label:'볼륨/윤곽',value:'볼륨/윤곽'},
+    {label:'바디',value:'바디'},{label:'컨디션/항노화',value:'컨디션/항노화'}
+  ],true);
+}
+
+function cgShowExpButtons(){
+  cgAddSys('혹시 다른 곳에서 피부 시술을 받아보신 적 있으세요?');
+  cgShowButtons('cgExp',[
+    {label:'네, 받아봤어요',value:'네, 다른 곳에서 시술을 받아본 적 있어요'},
+    {label:'아니요, 이 고민에 대해서는 처음이에요',value:'아니요, 이 고민에 대해서는 처음이에요'}
+  ],false);
+}
+
+// --- AI call (background, with callback for next buttons) ---
+function cgCallAI(userText,callback){
+  cgShowLoading();
+  var apiMessages=cgMessages.filter(function(m){return m.role==='user'||m.role==='assistant'});
+  fetch(CG_ENDPOINT,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({messages:apiMessages,session_id:cgSessionId})
+  })
+  .then(function(r){return r.json()})
+  .then(function(data){
+    cgHideLoading();
+    if(data.reply) cgAddSys(data.reply);
+    cgLogMessage('system',data.reply||'');
+    if(callback) callback(data);
+  })
+  .catch(function(){
+    cgHideLoading();
+    document.getElementById('cgOffline').style.display='block';
+    cgAddSys('죄송합니다. 잠시 연결이 원활하지 않습니다.');
+    if(callback) callback(null);
+  });
+}
+
+// --- Free text input (for stage 5 additional notes) ---
+function cgSend(){
+  var input=document.getElementById('cgInput');
+  var text=input.value.trim();
+  if(!text)return;
+  input.value='';
+  // Remove any remaining chips
+  var chips=document.querySelectorAll('#cgMessages .cg-chips');
+  chips.forEach(function(c){c.remove()});
+  cgOnSelect(text);
+}
+
+function cgShowProfile(profile){
+  var container=document.getElementById('cgMessages');
+  var card=document.createElement('div');
+  card.className='cg-profile-card';
+  var h='<div class="cg-profile-header">상담 준비 완료</div>';
+  h+='<div class="cg-profile-row"><span class="cg-profile-label">방문 유형</span><span class="cg-profile-value">'+profile.visit_type+'</span></div>';
+  if(profile.primary_concern){
+    h+='<div class="cg-profile-row"><span class="cg-profile-label">주요 고민</span><span class="cg-profile-value">'+profile.primary_concern.area+' - '+profile.primary_concern.detail+'</span></div>';
+  }
+  if(profile.secondary_concerns&&profile.secondary_concerns.length>0){
+    var secs=profile.secondary_concerns.map(function(s){return s.area}).join(', ');
+    h+='<div class="cg-profile-row"><span class="cg-profile-label">추가 고민</span><span class="cg-profile-value">'+secs+'</span></div>';
+  }
+  if(profile.priorities&&profile.priorities.length>0){
+    h+='<div class="cg-profile-row"><span class="cg-profile-label">우선순위</span><span class="cg-profile-value">'+profile.priorities.join(', ')+'</span></div>';
+  }
+  if(profile.conversation_tone_memo){
+    h+='<div class="cg-profile-row"><span class="cg-profile-label">메모</span><span class="cg-profile-value">'+profile.conversation_tone_memo+'</span></div>';
+  }
+  card.innerHTML=h;
+  container.appendChild(card);
+  container.scrollTop=container.scrollHeight;
+  // Log profile to DB
+  cgLogProfile(profile);
+}
+
+function cgLogProfile(profile){
+  fetch(SB_URL+'/rest/v1/tones_sessions?id=eq.'+cgSessionId,{
+    method:'PATCH',
+    headers:{'Content-Type':'application/json','apikey':SB_ANON,'Authorization':'Bearer '+SB_ANON,'Prefer':'return=minimal'},
+    body:JSON.stringify({ended_at:new Date().toISOString()})
+  }).catch(function(){});
+}
+
+// ========== CUSTOMER GUIDE: DATA LOGGING ==========
+function cgLogSession(){
+  fetch(SB_URL+'/rest/v1/tones_sessions',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','apikey':SB_ANON,'Authorization':'Bearer '+SB_ANON,'Prefer':'return=minimal'},
+    body:JSON.stringify({id:cgSessionId,mode:'browse'})
+  }).catch(function(){});
+}
+
+function cgLogMessage(role,content){
+  fetch(SB_URL+'/rest/v1/tones_messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','apikey':SB_ANON,'Authorization':'Bearer '+SB_ANON,'Prefer':'return=minimal'},
+    body:JSON.stringify({session_id:cgSessionId,role:role,content:content})
+  }).catch(function(){});
+}
+
+function cgLogRecommendations(cards,concern){
+  cards.forEach(function(card){
+    fetch(SB_URL+'/rest/v1/tones_recommendations',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':SB_ANON,'Authorization':'Bearer '+SB_ANON,'Prefer':'return=minimal'},
+      body:JSON.stringify({session_id:cgSessionId,concern:concern,program_name:card.name,tier:card.tier})
+    }).catch(function(){});
+  });
+}
+
+function cgLogProgramClick(name){
+  fetch(SB_URL+'/rest/v1/tones_recommendations?session_id=eq.'+cgSessionId+'&program_name=eq.'+encodeURIComponent(name),{
+    method:'PATCH',
+    headers:{'Content-Type':'application/json','apikey':SB_ANON,'Authorization':'Bearer '+SB_ANON,'Prefer':'return=minimal'},
+    body:JSON.stringify({clicked:true})
+  }).catch(function(){});
+}
+
+// ========== CUSTOMER GUIDE: STAFF ==========
+function renderStaff(){
+  var staff=[
+    {name:'이성원',role:'대표원장',initial:'S',philosophy:'모든 시술에 원리와 근거를 설명합니다'},
+    {name:'임규리',role:'총괄부원장',initial:'G',philosophy:'고객의 피부를 함께 이해하는 것이 시작입니다'},
+    {name:'백채연',role:'부원장',initial:'C',philosophy:'꼼꼼하고 세심한 케어를 약속합니다'},
+    {name:'황도근',role:'부원장',initial:'D',philosophy:'최선의 결과를 위한 복합 설계를 추구합니다'},
+    {name:'이지환',role:'부원장',initial:'J',philosophy:'편안한 상담과 정직한 진료를 지향합니다'},
+    {name:'김의형',role:'부원장',initial:'E',philosophy:'고객 한 분 한 분에 맞춤 케어를 합니다'},
+    {name:'한사라',role:'부원장',initial:'S',philosophy:'따뜻한 상담과 정확한 시술을 추구합니다'}
+  ];
+  var el=document.getElementById('cg-staff');
+  var h='<div class="cg-staff-header">'
+    +'<div class="cg-staff-title">의료진 소개</div>'
+    +'<div class="cg-staff-sub">어떤 원장님께 받아도 동일한 만족도를 약속합니다</div>'
+    +'</div>'
+    +'<div class="cg-staff-grid">';
+  staff.forEach(function(s){
+    h+='<div class="cg-staff-card">'
+      +'<div class="cg-staff-photo">'+s.initial+'</div>'
+      +'<div class="cg-staff-name">'+s.name+'</div>'
+      +'<div class="cg-staff-role">'+s.role+'</div>'
+      +'<div class="cg-staff-philosophy">'+s.philosophy+'</div>'
+      +'</div>';
+  });
+  h+='</div>';
+  el.innerHTML=h;
+}
+</script>
+</body>
+</html>
