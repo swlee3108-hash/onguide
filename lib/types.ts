@@ -5,6 +5,9 @@ export interface Session {
   mode: "browse" | "consult";
   device_id: string | null;
   chart_number: string | null;
+  profile: Profile | null;
+  concerns: string[] | null;
+  sub_concerns: string[] | null;
 }
 
 export interface Message {

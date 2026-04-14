@@ -5,7 +5,8 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import ChartNumberInput from "@/components/staff/ChartNumberInput";
-import { CONCERNS, SUB_CONCERNS } from "@/lib/constants";
+import ProfileCard from "@/components/customer/ProfileCard";
+import { SUB_CONCERNS } from "@/lib/constants";
 import type { Session, Message } from "@/lib/types";
 
 interface ConcernPath {
@@ -13,19 +14,18 @@ interface ConcernPath {
   sub: string;
 }
 
-function extractConcernPaths(msgs: Message[]): ConcernPath[] {
-  const userTexts = msgs.filter((m) => m.role === "user").map((m) => m.content);
-  const results: ConcernPath[] = [];
+// Prefer structured tags persisted during the flow.
+// Fall back to message-based inference only when tags are absent (legacy sessions).
+function buildConcernPaths(session: Session): ConcernPath[] {
+  const concerns = session.concerns ?? [];
+  const subs = session.sub_concerns ?? [];
+  if (concerns.length === 0) return [];
 
-  for (const c of CONCERNS) {
-    const keywords = c.value.split("/");
-    if (userTexts.some((t) => keywords.some((kw) => t.includes(kw)))) {
-      const subs = SUB_CONCERNS[c.value] || [];
-      const matchedSub = subs.find((s) => userTexts.some((t) => t.includes(s)));
-      results.push({ concern: c.value, sub: matchedSub || "" });
-    }
-  }
-  return results;
+  return concerns.map((concern) => {
+    const pool = SUB_CONCERNS[concern] ?? [];
+    const matchedSub = subs.find((s) => pool.includes(s)) ?? "";
+    return { concern, sub: matchedSub };
+  });
 }
 
 export default function SessionDetailPage() {
@@ -34,11 +34,17 @@ export default function SessionDetailPage() {
   const [messages, setMessages] = useState<Message[]>([]);
 
   useEffect(() => {
-    supabase.from("tones_sessions").select("*").eq("id", id).single().then(({ data }) => setSession(data));
-    supabase.from("tones_messages").select("*").eq("session_id", id).order("created_at").then(({ data }) => setMessages(data || []));
+    supabase.from("tones_sessions").select("*").eq("id", id).single().then(({ data, error }) => {
+      if (error) console.error("session fetch", error);
+      setSession(data);
+    });
+    supabase.from("tones_messages").select("*").eq("session_id", id).order("created_at").then(({ data, error }) => {
+      if (error) console.error("messages fetch", error);
+      setMessages(data || []);
+    });
   }, [id]);
 
-  const concernPaths = useMemo(() => extractConcernPaths(messages), [messages]);
+  const concernPaths = useMemo(() => (session ? buildConcernPaths(session) : []), [session]);
 
   const openGuide = (path: ConcernPath) => {
     let url = `/mindmap.html?view=guide&concern=${encodeURIComponent(path.concern)}`;
@@ -54,7 +60,10 @@ export default function SessionDetailPage() {
 
   return (
     <div className="max-w-[800px] mx-auto px-6 py-8">
-      <Link href="/staff" className="text-xs text-a-caramel hover:text-a-copper font-medium">
+      <Link
+        href="/staff"
+        className="inline-flex items-center min-h-[44px] text-xs text-a-caramel hover:text-a-copper font-medium"
+      >
         ← 목록으로
       </Link>
 
@@ -69,25 +78,33 @@ export default function SessionDetailPage() {
         <ChartNumberInput sessionId={session.id} initial={session.chart_number} />
       </div>
 
+      {/* AI-generated profile summary */}
+      {session.profile && (
+        <div className="mb-6">
+          <ProfileCard profile={session.profile} />
+        </div>
+      )}
+
+      {/* Concern-based tools */}
       {concernPaths.length > 0 && (
         <div className="mb-6 p-4 bg-surface border border-subtle rounded-lg shadow-sm">
           <p className="text-[11px] font-semibold text-t-muted tracking-wide mb-3">고민 기반 상담 도구</p>
           <div className="flex flex-col gap-2">
             {concernPaths.map((path) => (
-              <div key={path.concern} className="flex items-center gap-2">
-                <span className="text-xs font-medium text-t-body px-2 py-1 bg-muted rounded-xs">{path.concern}</span>
+              <div key={path.concern} className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-semibold text-t-primary px-2 py-1 bg-muted rounded-xs">{path.concern}</span>
                 {path.sub && (
                   <span className="text-xs text-t-secondary px-2 py-1 bg-muted rounded-xs">{path.sub}</span>
                 )}
                 <button
                   onClick={() => openGuide(path)}
-                  className="text-[11px] font-medium text-a-caramel hover:text-a-copper px-2 py-1 border border-subtle rounded-xs hover:border-a-caramel transition-colors"
+                  className="inline-flex items-center min-h-[36px] text-[11px] font-medium text-a-caramel hover:text-a-copper px-3 py-1.5 border border-subtle rounded-xs hover:border-a-caramel transition-colors"
                 >
                   상담가이드
                 </button>
                 <button
                   onClick={() => openMindmap(path)}
-                  className="text-[11px] font-medium text-a-caramel hover:text-a-copper px-2 py-1 border border-subtle rounded-xs hover:border-a-caramel transition-colors"
+                  className="inline-flex items-center min-h-[36px] text-[11px] font-medium text-a-caramel hover:text-a-copper px-3 py-1.5 border border-subtle rounded-xs hover:border-a-caramel transition-colors"
                 >
                   마인드맵
                 </button>
@@ -97,7 +114,9 @@ export default function SessionDetailPage() {
         </div>
       )}
 
+      {/* Raw conversation */}
       <div className="bg-surface border border-subtle rounded-lg p-6 shadow-sm">
+        <p className="text-[11px] font-semibold text-t-muted tracking-wide mb-3">대화 전문</p>
         <div className="flex flex-col gap-3">
           {messages.map((m) => (
             <div
@@ -111,6 +130,9 @@ export default function SessionDetailPage() {
               {m.content}
             </div>
           ))}
+          {messages.length === 0 && (
+            <p className="text-xs text-t-muted text-center py-4">대화 기록이 없습니다</p>
+          )}
         </div>
       </div>
     </div>

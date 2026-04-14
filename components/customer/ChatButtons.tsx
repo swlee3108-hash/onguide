@@ -7,6 +7,8 @@ interface Option {
   value: string;
 }
 
+const BUTTON_BASE = "min-h-[44px] px-4 py-2.5 border rounded-full text-[13px] font-medium transition-all duration-200";
+
 export function SingleSelect({ options, onSelect }: { options: Option[]; onSelect: (value: string) => void }) {
   return (
     <div className="flex gap-2 flex-wrap mt-2 animate-fade-in">
@@ -14,7 +16,7 @@ export function SingleSelect({ options, onSelect }: { options: Option[]; onSelec
         <button
           key={o.value}
           onClick={() => onSelect(o.value)}
-          className="px-4 py-2 bg-surface border border-subtle rounded-full text-[13px] font-medium text-t-body hover:border-a-caramel hover:text-a-copper hover:bg-a-caramel/5 active:bg-a-caramel/10 transition-all duration-200"
+          className={`${BUTTON_BASE} bg-surface border-subtle text-t-body hover:border-a-caramel hover:text-a-copper hover:bg-a-caramel/5 active:bg-a-caramel/10`}
         >
           {o.label}
         </button>
@@ -33,6 +35,7 @@ export function MultiSelect({
   maxSelect?: number;
 }) {
   const [selected, setSelected] = useState<string[]>([]);
+  const reachedLimit = !!maxSelect && selected.length >= maxSelect;
 
   const toggle = (value: string) => {
     setSelected((prev) => {
@@ -43,30 +46,43 @@ export function MultiSelect({
   };
 
   return (
-    <div className="flex gap-2 flex-wrap mt-2 animate-fade-in">
-      {options.map((o) => (
+    <div className="mt-2 animate-fade-in">
+      {maxSelect && (
+        <p className="text-[11px] text-t-muted mb-2">
+          최대 {maxSelect}개까지 선택할 수 있어요 ({selected.length}/{maxSelect})
+        </p>
+      )}
+      <div className="flex gap-2 flex-wrap">
+        {options.map((o) => {
+          const isSelected = selected.includes(o.value);
+          const dim = !isSelected && reachedLimit;
+          return (
+            <button
+              key={o.value}
+              onClick={() => toggle(o.value)}
+              className={`${BUTTON_BASE} ${
+                isSelected
+                  ? "bg-a-caramel/10 border-a-caramel text-a-copper"
+                  : dim
+                  ? "bg-surface border-subtle text-t-hint cursor-default"
+                  : "bg-surface border-subtle text-t-body hover:border-a-caramel hover:text-a-copper"
+              }`}
+            >
+              {o.label}
+            </button>
+          );
+        })}
         <button
-          key={o.value}
-          onClick={() => toggle(o.value)}
-          className={`px-4 py-2 border rounded-full text-[13px] font-medium transition-all duration-200 ${
-            selected.includes(o.value)
-              ? "bg-a-caramel/10 border-a-caramel text-a-copper"
-              : "bg-surface border-subtle text-t-body hover:border-a-caramel hover:text-a-copper"
+          onClick={() => { if (selected.length > 0) onSubmit(selected); }}
+          className={`${BUTTON_BASE} font-semibold ${
+            selected.length > 0
+              ? "bg-cta text-white border-cta"
+              : "bg-subtle text-t-hint border-subtle cursor-default"
           }`}
         >
-          {o.label}
+          선택 완료
         </button>
-      ))}
-      <button
-        onClick={() => { if (selected.length > 0) onSubmit(selected); }}
-        className={`px-4 py-2 rounded-full text-[13px] font-semibold transition-all duration-200 ${
-          selected.length > 0
-            ? "bg-cta text-white border border-cta"
-            : "bg-subtle text-t-hint border border-subtle cursor-default"
-        }`}
-      >
-        선택 완료
-      </button>
+      </div>
     </div>
   );
 }

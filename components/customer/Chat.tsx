@@ -9,25 +9,36 @@ import { CONCERNS, SUB_CONCERNS, PRIORITIES } from "@/lib/constants";
 import type { Profile, ChatResponse } from "@/lib/types";
 import { supabase } from "@/lib/supabase";
 
-// Stage flow:
-// 0    : visit type (처음/재방문)
-// 0.5  : revisit purpose (유지관리/새고민/둘다)
-// 0.6  : revisit - previous treatment free input
-// 0.7  : revisit - satisfaction buttons
-// 1    : concern selection (6 categories, multi)
-// 2    : sub-concern selection (multi)
-// 3    : treatment experience yes/no
-// 3.5  : (yes) what treatment? free input
-// 3.7  : (yes) satisfaction buttons
-// 4    : priority selection (multi, max 2)
-// 5    : additional notes (button + free input)
-// 6    : done, profile displayed
+// Stage flow (see design spec):
+// 0    visit type (처음/재방문)
+// 0.5  revisit purpose
+// 0.6  revisit prev treatment (free input)
+// 0.7  revisit satisfaction
+// 1    concern categories (multi)
+// 2    sub-concerns (multi)
+// 3    treatment experience yes/no
+// 3.5  (yes) what treatment? (free input)
+// 3.7  (yes) satisfaction
+// 4    priorities (multi, max 2)
+// 5    additional notes
+// 6    done + profile
 type Stage = number;
 
+type Role = "assistant" | "user";
+
 interface Msg {
-  role: "assistant" | "user";
+  role: Role;
   content: string;
 }
+
+const SATISFACTION_OPTIONS = [
+  { label: "만족스러웠어요", value: "만족스러웠어요" },
+  { label: "보통이었어요", value: "보통이었어요" },
+  { label: "기대에 못 미쳤어요", value: "기대보다 효과가 부족했어요" },
+  { label: "불편한 점이 있었어요", value: "불편한 점이 있었어요" },
+];
+
+const FREE_INPUT_STAGES = new Set([0.6, 3.5, 5]);
 
 export default function Chat({ onBack }: { onBack: () => void }) {
   const [messages, setMessages] = useState<Msg[]>([]);
@@ -39,76 +50,87 @@ export default function Chat({ onBack }: { onBack: () => void }) {
   const [selectedConcerns, setSelectedConcerns] = useState<string[]>([]);
   const [inputValue, setInputValue] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
+  const sectionRef = useRef<HTMLElement>(null);
+
+  // Track messages in a ref so async callbacks always see the latest
+  const messagesRef = useRef<Msg[]>([]);
+  messagesRef.current = messages;
+
+  const sessionIdRef = useRef<string>("");
+  sessionIdRef.current = sessionId;
+
+  // Track whether the session row has been created in the DB
+  const sessionCreatedRef = useRef(false);
 
   const scrollToBottom = () => bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   useEffect(scrollToBottom, [messages, loading, stage]);
 
-  const sessionCreated = useRef(false);
-
   const reset = useCallback(() => {
     const id = crypto.randomUUID();
     setMessages([]);
+    messagesRef.current = [];
     setStage(0);
     setStageHistory([]);
     setProfile(null);
     setSessionId(id);
+    sessionIdRef.current = id;
     setSelectedConcerns([]);
     setInputValue("");
-    sessionCreated.current = false;
+    sessionCreatedRef.current = false;
   }, []);
 
-  const ensureSession = useCallback(() => {
-    if (sessionCreated.current) return;
-    sessionCreated.current = true;
-    supabase.from("tones_sessions").insert({ id: sessionId, mode: "browse" }).then();
-  }, [sessionId]);
-
-  const goToPrevStage = () => {
-    if (stageHistory.length === 0) {
-      onBack();
-      return;
+  // Ensure a tones_sessions row exists. Returns when the insert resolves.
+  // Subsequent calls are no-ops.
+  const ensureSession = useCallback(async () => {
+    if (sessionCreatedRef.current) return;
+    sessionCreatedRef.current = true;
+    const { error } = await supabase.from("tones_sessions").insert({ id: sessionIdRef.current, mode: "browse" });
+    if (error) {
+      console.error("tones_sessions insert failed", error);
+      sessionCreatedRef.current = false; // allow retry
+      throw error;
     }
-    const prev = stageHistory[stageHistory.length - 1];
-    setStageHistory((h) => h.slice(0, -1));
-    // Remove messages: find last user msg, remove it and everything after + the AI reply before it
-    setMessages((msgs) => {
-      if (msgs.length === 0) return msgs;
-      // Find last user message index
-      let lastUserIdx = -1;
-      for (let i = msgs.length - 1; i >= 0; i--) {
-        if (msgs[i].role === "user") { lastUserIdx = i; break; }
-      }
-      if (lastUserIdx < 0) return msgs;
-      // Also remove the AI reply that came right before (the question that led to this answer)
-      const cutFrom = lastUserIdx > 0 && msgs[lastUserIdx - 1].role === "assistant" ? lastUserIdx - 1 : lastUserIdx;
-      return msgs.slice(0, cutFrom);
-    });
-    setStage(prev);
-  };
+  }, []);
 
   useEffect(() => { reset(); }, [reset]);
 
-  const addSys = (text: string) => setMessages((prev) => [...prev, { role: "assistant", content: text }]);
-  const addUsr = (text: string) => setMessages((prev) => [...prev, { role: "user", content: text }]);
+  const addSys = (text: string) => {
+    const next = [...messagesRef.current, { role: "assistant" as const, content: text }];
+    messagesRef.current = next;
+    setMessages(next);
+  };
+  const addUsr = (text: string) => {
+    const next = [...messagesRef.current, { role: "user" as const, content: text }];
+    messagesRef.current = next;
+    setMessages(next);
+  };
 
-  const callAI = async (allMsgs: Msg[]): Promise<ChatResponse | null> => {
+  const logMessages = async (userText: string, systemText: string) => {
+    const { error } = await supabase.from("tones_messages").insert([
+      { session_id: sessionIdRef.current, role: "user", content: userText },
+      { session_id: sessionIdRef.current, role: "system", content: systemText },
+    ]);
+    if (error) console.error("tones_messages insert failed", error);
+  };
+
+  const callAI = async (allMsgs: Msg[], userText: string): Promise<ChatResponse | null> => {
     setLoading(true);
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: allMsgs, session_id: sessionId }),
+        body: JSON.stringify({ messages: allMsgs, session_id: sessionIdRef.current }),
       });
+      if (!res.ok) throw new Error(`chat api ${res.status}`);
       const data: ChatResponse = await res.json();
       setLoading(false);
       if (data.reply) addSys(data.reply);
       if (data.profile) setProfile(data.profile);
-      supabase.from("tones_messages").insert([
-        { session_id: sessionId, role: "user", content: allMsgs[allMsgs.length - 1]?.content || "" },
-        { session_id: sessionId, role: "system", content: data.reply || "" },
-      ]).then();
+      // Fire-and-forget logging, but await ensureSession first via the caller
+      logMessages(userText, data.reply || "");
       return data;
-    } catch {
+    } catch (err) {
+      console.error("callAI error", err);
       setLoading(false);
       addSys("죄송합니다. 잠시 연결이 원활하지 않습니다.");
       return null;
@@ -120,74 +142,89 @@ export default function Chat({ onBack }: { onBack: () => void }) {
     setStage(nextStage);
   };
 
+  const goToPrevStage = () => {
+    if (stageHistory.length === 0) { onBack(); return; }
+    const prev = stageHistory[stageHistory.length - 1];
+    setStageHistory((h) => h.slice(0, -1));
+    // Remove the last user message + the AI reply that preceded it (the question)
+    const msgs = messagesRef.current;
+    let lastUserIdx = -1;
+    for (let i = msgs.length - 1; i >= 0; i--) { if (msgs[i].role === "user") { lastUserIdx = i; break; } }
+    if (lastUserIdx >= 0) {
+      const cutFrom = lastUserIdx > 0 && msgs[lastUserIdx - 1].role === "assistant" ? lastUserIdx - 1 : lastUserIdx;
+      const trimmed = msgs.slice(0, cutFrom);
+      messagesRef.current = trimmed;
+      setMessages(trimmed);
+    }
+    setStage(prev);
+  };
+
+  const persistTags = async (field: "concerns" | "sub_concerns", values: string[]) => {
+    const { error } = await supabase.from("tones_sessions").update({ [field]: values }).eq("id", sessionIdRef.current);
+    if (error) console.error(`update ${field} failed`, error);
+  };
+
+  const persistProfile = async (p: Profile) => {
+    const { error } = await supabase.from("tones_sessions").update({
+      profile: p,
+      ended_at: new Date().toISOString(),
+    }).eq("id", sessionIdRef.current);
+    if (error) console.error("profile save failed", error);
+  };
+
   const onSelect = async (value: string) => {
-    ensureSession();
+    // Ensure session row exists before any message insert
+    try { await ensureSession(); } catch { /* logged */ }
     addUsr(value);
-    const newMsgs: Msg[] = [...messages, { role: "user", content: value }];
+    const newMsgs: Msg[] = [...messagesRef.current];
 
     if (stage === 0) {
-      // Visit type
-      if (value.includes("다녀본")) {
-        advanceTo(0.5);
-        await callAI(newMsgs);
-      } else {
-        advanceTo(1);
-        await callAI(newMsgs);
-      }
+      advanceTo(value.includes("다녀본") ? 0.5 : 1);
+      await callAI(newMsgs, value);
     } else if (stage === 0.5) {
-      // Revisit purpose
       if (value.includes("유지") && !value.includes("새로운") && !value.includes("둘")) {
         advanceTo(0.6);
-        await callAI(newMsgs);
       } else {
         advanceTo(1);
-        await callAI(newMsgs);
       }
+      await callAI(newMsgs, value);
     } else if (stage === 0.6) {
-      // Revisit - previous treatment entered -> ask satisfaction
       advanceTo(0.7);
-      await callAI(newMsgs);
+      await callAI(newMsgs, value);
     } else if (stage === 0.7) {
-      // Revisit - satisfaction answered -> additional notes
       advanceTo(5);
-      await callAI(newMsgs);
+      await callAI(newMsgs, value);
     } else if (stage === 1) {
-      // Concerns selected -> sub-concerns
-      setSelectedConcerns(value.split(", "));
+      const concerns = value.split(", ");
+      setSelectedConcerns(concerns);
+      persistTags("concerns", concerns);
       advanceTo(2);
-      await callAI(newMsgs);
+      await callAI(newMsgs, value);
     } else if (stage === 2) {
-      // Sub-concerns selected -> treatment experience
+      const subs = value.split(", ");
+      persistTags("sub_concerns", subs);
       advanceTo(3);
-      await callAI(newMsgs);
+      await callAI(newMsgs, value);
     } else if (stage === 3) {
-      // Treatment experience yes/no
       if (value.includes("네") || value.includes("받아본")) {
-        // YES -> ask what treatment (free input)
         advanceTo(3.5);
-        await callAI(newMsgs);
       } else {
-        // NO -> skip to priorities
         advanceTo(4);
-        await callAI(newMsgs);
       }
+      await callAI(newMsgs, value);
     } else if (stage === 3.5) {
-      // What treatment? (free input) -> satisfaction
       advanceTo(3.7);
-      await callAI(newMsgs);
+      await callAI(newMsgs, value);
     } else if (stage === 3.7) {
-      // Satisfaction answered -> priorities
       advanceTo(4);
-      await callAI(newMsgs);
+      await callAI(newMsgs, value);
     } else if (stage === 4) {
-      // Priorities selected -> additional notes
       advanceTo(5);
-      await callAI(newMsgs);
+      await callAI(newMsgs, value);
     } else if (stage === 5) {
-      // Additional notes -> done
       advanceTo(6);
-      await callAI(newMsgs);
-      supabase.from("tones_sessions").update({ ended_at: new Date().toISOString() }).eq("id", sessionId).then();
+      const data = await callAI(newMsgs, value);
+      if (data?.profile) persistProfile(data.profile);
     }
   };
 
@@ -198,9 +235,7 @@ export default function Chat({ onBack }: { onBack: () => void }) {
     onSelect(text);
   };
 
-  // Stages that show a free text input bar
-  const freeInputStages = [0.6, 3.5, 5];
-  const showFreeInput = freeInputStages.includes(stage) && !loading;
+  const showFreeInput = FREE_INPUT_STAGES.has(stage) && !loading;
 
   const renderStageUI = () => {
     if (loading) return null;
@@ -227,20 +262,11 @@ export default function Chat({ onBack }: { onBack: () => void }) {
           />
         );
       case 0.6:
-        // Free input only (이전 시술 입력)
-        return null;
+      case 3.5:
+        return null; // free input only
       case 0.7:
-        return (
-          <SingleSelect
-            options={[
-              { label: "만족스러웠어요", value: "만족스러웠어요" },
-              { label: "보통이었어요", value: "보통이었어요" },
-              { label: "기대에 못 미쳤어요", value: "기대보다 효과가 부족했어요" },
-              { label: "불편한 점이 있었어요", value: "불편한 점이 있었어요" },
-            ]}
-            onSelect={onSelect}
-          />
-        );
+      case 3.7:
+        return <SingleSelect options={SATISFACTION_OPTIONS} onSelect={onSelect} />;
       case 1:
         return (
           <MultiSelect
@@ -268,21 +294,6 @@ export default function Chat({ onBack }: { onBack: () => void }) {
             onSelect={onSelect}
           />
         );
-      case 3.5:
-        // Free input only (어떤 시술 받았는지)
-        return null;
-      case 3.7:
-        return (
-          <SingleSelect
-            options={[
-              { label: "만족스러웠어요", value: "만족스러웠어요" },
-              { label: "보통이었어요", value: "보통이었어요" },
-              { label: "기대에 못 미쳤어요", value: "기대보다 효과가 부족했어요" },
-              { label: "불편한 점이 있었어요", value: "불편한 점이 있었어요" },
-            ]}
-            onSelect={onSelect}
-          />
-        );
       case 4:
         return (
           <MultiSelect
@@ -304,9 +315,12 @@ export default function Chat({ onBack }: { onBack: () => void }) {
   };
 
   return (
-    <section className="px-10 py-10 max-w-[720px] mx-auto">
+    <section ref={sectionRef} className="px-10 py-10 max-w-[720px] mx-auto">
       {stage !== 6 && (
-        <button onClick={goToPrevStage} className="text-xs text-a-caramel hover:text-a-copper font-medium mb-4">
+        <button
+          onClick={goToPrevStage}
+          className="inline-flex items-center justify-center min-h-[44px] px-4 text-sm text-a-caramel hover:text-a-copper font-medium mb-4"
+        >
           ← 이전으로
         </button>
       )}
@@ -317,14 +331,14 @@ export default function Chat({ onBack }: { onBack: () => void }) {
       </div>
       <div className="flex flex-col gap-3 mb-6">
         {messages.length === 0 && (
-          <SystemBubble text="안녕하세요, 톤즈의원입니다. 상담 전에 몇 가지 여쭤보고, 고객님께 맞는 상담을 준비해드릴게요." />
+          <SystemBubble text="안녕하세요, 톤즈의원 수원광교점입니다. 상담 전에 몇 가지 여쭤보고, 고객님께 맞는 상담을 준비해드릴게요." />
         )}
         {messages.map((m, i) =>
           m.role === "assistant" ? <SystemBubble key={i} text={m.content} /> : <UserBubble key={i} text={m.content} />
         )}
         {loading && <LoadingBubble />}
         {profile && <ProfileCard profile={profile} />}
-        {profile && <AutoReset onReset={reset} />}
+        {profile && <AutoReset onReset={reset} scopeRef={sectionRef} />}
         {renderStageUI()}
         <div ref={bottomRef} />
       </div>
@@ -340,6 +354,7 @@ export default function Chat({ onBack }: { onBack: () => void }) {
           <button
             onClick={handleFreeInput}
             className="h-12 w-12 bg-cta text-white rounded-md text-lg flex items-center justify-center hover:bg-cta-hover disabled:bg-subtle disabled:text-t-hint transition-colors"
+            aria-label="보내기"
           >
             &#8593;
           </button>
