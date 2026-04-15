@@ -11,19 +11,17 @@ export default function Home() {
   const [section, setSection] = useState<Section>("philosophy");
 
   return (
-    <main className="h-screen overflow-hidden">
+    <main className="h-screen flex flex-col">
       {section === "philosophy" && (
-        <div className="h-full overflow-y-auto">
+        <div className="flex-1 min-h-0 overflow-y-auto">
           <Philosophy onStartChat={() => setSection("chat")} onShowStaff={() => setSection("staff")} />
         </div>
       )}
       {section === "chat" && (
-        <div className="h-full overflow-y-auto">
-          <Chat onBack={() => setSection("philosophy")} />
-        </div>
+        <Chat onBack={() => setSection("philosophy")} />
       )}
       {section === "staff" && (
-        <div className="h-full overflow-y-auto">
+        <div className="flex-1 min-h-0 overflow-y-auto">
           <StaffSection onBack={() => setSection("philosophy")} />
         </div>
       )}

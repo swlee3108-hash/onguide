@@ -315,35 +315,44 @@ export default function Chat({ onBack }: { onBack: () => void }) {
   };
 
   return (
-    <section ref={sectionRef} className="px-10 py-10 max-w-[720px] mx-auto">
-      {stage !== 6 && (
-        <button
-          onClick={goToPrevStage}
-          className="inline-flex items-center justify-center min-h-[44px] px-4 text-sm text-a-caramel hover:text-a-copper font-medium mb-4"
-        >
-          ← 이전으로
-        </button>
-      )}
-      <div className="text-center mb-6">
-        <p className="text-[10px] font-bold tracking-widest text-a-caramel">AI CONCIERGE</p>
-        <h2 className="text-[22px] font-bold tracking-tight text-t-primary mt-1">상담 전 간단한 안내를 도와드릴게요</h2>
-        <p className="text-xs text-t-muted mt-1">고객님께 맞는 상담을 준비해드립니다</p>
-      </div>
-      <div className="flex flex-col gap-3 mb-6">
-        {messages.length === 0 && (
-          <SystemBubble text="안녕하세요, 톤즈의원 수원광교점입니다. 상담 전에 몇 가지 여쭤보고, 고객님께 맞는 상담을 준비해드릴게요." />
+    <section ref={sectionRef} className="flex-1 min-h-0 flex flex-col max-w-[720px] w-full mx-auto">
+      {/* Header (fixed) */}
+      <div className="flex-shrink-0 px-10 pt-6 pb-4">
+        {stage !== 6 && (
+          <button
+            onClick={goToPrevStage}
+            className="inline-flex items-center justify-center min-h-[44px] px-4 text-sm text-a-caramel hover:text-a-copper font-medium mb-2"
+          >
+            ← 이전으로
+          </button>
         )}
-        {messages.map((m, i) =>
-          m.role === "assistant" ? <SystemBubble key={i} text={m.content} /> : <UserBubble key={i} text={m.content} />
-        )}
-        {loading && <LoadingBubble />}
-        {profile && <ProfileCard profile={profile} />}
-        {profile && <AutoReset onReset={reset} scopeRef={sectionRef} />}
-        {renderStageUI()}
-        <div ref={bottomRef} />
+        <div className="text-center">
+          <p className="text-[10px] font-bold tracking-widest text-a-caramel">AI CONCIERGE</p>
+          <h2 className="text-[22px] font-bold tracking-tight text-t-primary mt-1">상담 전 간단한 안내를 도와드릴게요</h2>
+          <p className="text-xs text-t-muted mt-1">고객님께 맞는 상담을 준비해드립니다</p>
+        </div>
       </div>
+
+      {/* Messages (scrollable) */}
+      <div className="flex-1 min-h-0 overflow-y-auto px-10">
+        <div className="flex flex-col gap-3 pb-4">
+          {messages.length === 0 && (
+            <SystemBubble text="안녕하세요, 톤즈의원 수원광교점입니다. 상담 전에 몇 가지 여쭤보고, 고객님께 맞는 상담을 준비해드릴게요." />
+          )}
+          {messages.map((m, i) =>
+            m.role === "assistant" ? <SystemBubble key={i} text={m.content} /> : <UserBubble key={i} text={m.content} />
+          )}
+          {loading && <LoadingBubble />}
+          {profile && <ProfileCard profile={profile} />}
+          {profile && <AutoReset onReset={reset} scopeRef={sectionRef} />}
+          {renderStageUI()}
+          <div ref={bottomRef} />
+        </div>
+      </div>
+
+      {/* Free input (fixed bottom) */}
       {showFreeInput && (
-        <div className="sticky bottom-0 pt-4 pb-2 bg-gradient-to-t from-page flex gap-2">
+        <div className="flex-shrink-0 px-10 pt-3 pb-4 border-t border-subtle bg-page flex gap-2">
           <input
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
