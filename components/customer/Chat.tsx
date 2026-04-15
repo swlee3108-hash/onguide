@@ -113,13 +113,13 @@ export default function Chat({ onBack }: { onBack: () => void }) {
     if (error) console.error("tones_messages insert failed", error);
   };
 
-  const callAI = async (allMsgs: Msg[], userText: string): Promise<ChatResponse | null> => {
+  const callAI = async (allMsgs: Msg[], userText: string, finalize = false): Promise<ChatResponse | null> => {
     setLoading(true);
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: allMsgs, session_id: sessionIdRef.current }),
+        body: JSON.stringify({ messages: allMsgs, session_id: sessionIdRef.current, finalize }),
       });
       if (!res.ok) throw new Error(`chat api ${res.status}`);
       const data: ChatResponse = await res.json();
@@ -222,10 +222,26 @@ export default function Chat({ onBack }: { onBack: () => void }) {
       advanceTo(5);
       await callAI(newMsgs, value);
     } else if (stage === 5) {
-      advanceTo(6);
-      const data = await callAI(newMsgs, value);
+      // Stage 5: 사용자가 자유입력 또는 "특별히 없어요"로 추가 전달사항 응답
+      // AI가 한 번 더 "더 있으신가요?" 확인. Stage 5 유지하여 응답박스 유지.
+      // 사용자가 "마무리하기" 버튼을 명시적으로 누를 때만 종료.
+      await callAI(newMsgs, value);
+    } else if (stage === 6) {
+      // Stage 6: 명시적 "마무리하기" 트리거. finalize=true로 마무리 + 프로필 생성.
+      const data = await callAI(newMsgs, value, true);
       if (data?.profile) persistProfile(data.profile);
     }
+  };
+
+  const finalizeChat = async () => {
+    try { await ensureSession(); } catch { /* logged */ }
+    const closingMsg = "이제 마무리할게요";
+    addUsr(closingMsg);
+    setStageHistory((h) => [...h, stage]);
+    setStage(6);
+    const newMsgs: Msg[] = [...messagesRef.current];
+    const data = await callAI(newMsgs, closingMsg, true);
+    if (data?.profile) persistProfile(data.profile);
   };
 
   const handleFreeInput = () => {
@@ -303,11 +319,16 @@ export default function Chat({ onBack }: { onBack: () => void }) {
           />
         );
       case 5:
+        // Stage 5: 자유입력 가능 + 마무리하기 버튼
         return (
-          <SingleSelect
-            options={[{ label: "아니요, 괜찮아요", value: "특별히 없어요" }]}
-            onSelect={onSelect}
-          />
+          <div className="mt-2 animate-fade-in flex gap-2 flex-wrap">
+            <button
+              onClick={finalizeChat}
+              className="min-h-[44px] px-5 py-2.5 border border-cta bg-cta text-white rounded-full text-[13px] font-semibold hover:bg-cta-hover transition-all"
+            >
+              이제 마무리할게요
+            </button>
+          </div>
         );
       default:
         return null;
